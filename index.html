@@ -40,11 +40,9 @@
         /* --- MAIN UI --- */
         #main-ui { display: none; width: 95%; max-width: 800px; padding: 30px; flex-direction: column; }
         
-        /* HEADER - Centered Date Nav */
+        /* HEADER */
         .header-flex { display: flex; justify-content: center; align-items: flex-end; margin-bottom: 40px; }
-        
         .date-nav { display: flex; align-items: center; gap: 20px; }
-        
         .nav-arrow {
             background: transparent; border: 1px solid #333; color: var(--accent);
             font-size: 1.5rem; cursor: pointer; padding: 10px 15px; border-radius: 8px;
@@ -67,7 +65,7 @@
         .card.done { border-color: var(--success); }
         .card.done .check { color: var(--success); text-shadow: 0 0 10px var(--success); }
 
-        /* Delete Button Styles */
+        /* Main Screen Delete Button */
         .delete-btn {
             background: transparent; border: none; color: #333; font-size: 1.5rem;
             cursor: pointer; padding: 0 0 0 15px; line-height: 1; transition: 0.2s;
@@ -81,12 +79,25 @@
         }
         .modal-content {
             background: var(--surface); width: 90%; max-width: 1000px; padding: 40px; border-radius: 20px;
-            display: flex; gap: 30px; border: 1px solid #333;
+            display: flex; gap: 30px; border: 1px solid #333; height: 500px;
         }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; flex: 2; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; flex: 2; overflow-y: auto; }
         .day-cell { aspect-ratio: 1; background: #000; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; border: 1px solid #222; }
         .day-cell.perfect { background: var(--success) !important; color: #000; font-weight: bold; }
-        .details-pane { flex: 1; background: #050505; padding: 20px; border-radius: 10px; }
+        .day-cell:hover, .day-cell.selected { border-color: var(--accent); background: #222; }
+        
+        .details-pane { flex: 1; background: #050505; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; }
+        
+        /* History List Styles */
+        #det-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
+        .hist-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 8px 0; border-bottom: 1px solid #222; font-size: 0.9rem; 
+        }
+        .hist-del-btn {
+            background: none; border: none; color: #444; cursor: pointer; font-size: 1.2rem;
+        }
+        .hist-del-btn:hover { color: var(--danger); }
 
         .btn {
             background: #222; color: #fff; padding: 12px 24px; border-radius: 8px;
@@ -122,7 +133,7 @@
         <div class="grid" id="habit-grid"></div>
 
         <div class="controls">
-            <button class="btn" onclick="toggleModal(true)">ANALYSIS</button>
+            <button class="btn" onclick="toggleModal(true)">MONTHLY OVERVIEW</button>
             <button class="btn" onclick="addHabit()">+ HABIT</button>
             <button class="btn" onclick="resetDay()">RESET PROGRESS</button>
         </div>
@@ -133,7 +144,7 @@
             <div class="calendar-grid" id="calendar"></div>
             <div class="details-pane">
                 <h3 id="det-date" style="color: var(--accent)">Select Day</h3>
-                <ul id="det-list" style="font-size: 0.9rem; line-height: 1.6;"></ul>
+                <ul id="det-list"></ul>
             </div>
         </div>
     </div>
@@ -141,7 +152,6 @@
     <script>
         const PIN = "8472";
         
-        // YOUR QUOTES HERE
         const QUOTES = [
             "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
             "The pain of discipline or the pain of regret"
@@ -150,6 +160,7 @@
         let habits = JSON.parse(localStorage.getItem('h-v5')) || [];
         let history = JSON.parse(localStorage.getItem('hist-v5')) || {};
         let viewOffset = 0; 
+        let selectedHistoryDate = null; // Track selected date in modal
 
         document.getElementById('pin-input').addEventListener('input', (e) => {
             if(e.target.value === PIN) {
@@ -166,14 +177,11 @@
         }
 
         function updateQuote() {
-            // Calculate Day of Year to cycle quotes
             const now = new Date();
             const start = new Date(now.getFullYear(), 0, 0);
             const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
             const oneDay = 1000 * 60 * 60 * 24;
             const dayOfYear = Math.floor(diff / oneDay);
-            
-            // Pick quote based on day
             const quoteIndex = dayOfYear % QUOTES.length;
             document.getElementById('daily-quote').innerText = QUOTES[quoteIndex].toUpperCase();
         }
@@ -206,14 +214,11 @@
 
             habits.forEach((h, index) => {
                 let isDone = false;
-                
                 if (isToday) {
                     isDone = h.done;
                 } else {
                     const record = history[viewDateStr];
-                    if (record && record.items.includes(h.name)) {
-                        isDone = true;
-                    }
+                    if (record && record.items.includes(h.name)) isDone = true;
                 }
 
                 const card = document.createElement('div');
@@ -261,6 +266,7 @@
             if (itemIndex > -1) histItems.splice(itemIndex, 1);
             else histItems.push(name);
 
+            // Update score
             history[dateStr].score = habits.length ? histItems.length / habits.length : 0;
             localStorage.setItem('hist-v5', JSON.stringify(history));
 
@@ -268,7 +274,7 @@
         }
 
         function deleteHabit(index) {
-            if(confirm("Are you sure you want to permanently delete this habit?")) {
+            if(confirm("Are you sure you want to permanently delete this habit from your main list?")) {
                 habits.splice(index, 1);
                 save();
                 render();
@@ -294,17 +300,64 @@
             const cal = document.getElementById('calendar'); cal.innerHTML = '';
             const now = new Date();
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            
             for(let d=1; d<=daysInMonth; d++) {
                 const ds = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const data = history[ds];
                 const cell = document.createElement('div');
-                cell.className = 'day-cell' + (data?.score === 1 ? ' perfect' : '');
+                cell.className = 'day-cell' + (data?.score >= 1 ? ' perfect' : '');
+                if (selectedHistoryDate === ds) cell.classList.add('selected');
+                
                 cell.innerText = d;
-                cell.onmouseover = () => {
-                    document.getElementById('det-date').innerText = `Day ${d}`;
-                    document.getElementById('det-list').innerHTML = data ? data.items.map(i=>`<li>${i}</li>`).join('') : 'No data';
-                };
+                
+                // Click to view details
+                cell.onclick = () => showHistoryDetails(ds, d);
+                
                 cal.appendChild(cell);
+            }
+        }
+
+        function showHistoryDetails(dateStr, dayNum) {
+            selectedHistoryDate = dateStr;
+            renderCalendar(); // Re-render to show selected state
+            
+            const data = history[dateStr];
+            document.getElementById('det-date').innerText = `Details for Day ${dayNum}`;
+            const list = document.getElementById('det-list');
+            list.innerHTML = '';
+
+            if (data && data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'hist-item';
+                    li.innerHTML = `
+                        <span>${item}</span>
+                        <button class="hist-del-btn" onclick="removeHistoryItem('${dateStr}', '${item}')">&times;</button>
+                    `;
+                    list.appendChild(li);
+                });
+            } else {
+                list.innerHTML = '<div style="color:#666; font-style:italic;">No habits recorded.</div>';
+            }
+        }
+
+        function removeHistoryItem(dateStr, itemName) {
+            if(!confirm(`Remove "${itemName}" from history for this date?`)) return;
+
+            const rec = history[dateStr];
+            if(rec) {
+                // Filter out the item
+                rec.items = rec.items.filter(x => x !== itemName);
+                
+                // Update score (approximate based on current habit count to keep consistent)
+                rec.score = habits.length > 0 ? rec.items.length / habits.length : 0;
+                
+                localStorage.setItem('hist-v5', JSON.stringify(history));
+                
+                // Refresh views
+                showHistoryDetails(dateStr, parseInt(dateStr.split('-')[2]));
+                renderCalendar();
+                render(); // In case we are currently viewing this day in the background
             }
         }
 
@@ -329,7 +382,6 @@
             } 
         }
 
-        // TV Nav
         window.addEventListener('keydown', (e) => {
             const f = document.querySelectorAll('.card, .btn, .day-cell, .nav-arrow');
             let i = Array.from(f).indexOf(document.activeElement);
