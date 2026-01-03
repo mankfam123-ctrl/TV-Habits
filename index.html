@@ -63,8 +63,6 @@
             background: var(--surface); padding: 15px 20px; border-radius: 10px; border: 1px solid #222;
             cursor: pointer; transition: all 0.15s ease-out; display: flex; align-items: center; justify-content: space-between;
         }
-        
-        /* PC Tweak: Only show the ring on keyboard focus, not mouse click */
         .card:focus-visible { border-color: var(--accent); outline: none; background: #1a1a1a; transform: translateX(5px); }
         .card:hover { border-color: #444; background: #161616; transform: translateY(-2px); }
         
@@ -72,7 +70,6 @@
         .card.done:hover { border-color: var(--success); }
         .card.done .check { color: var(--success); text-shadow: 0 0 10px var(--success); }
 
-        /* Main Screen Delete Button */
         .delete-btn {
             background: transparent; border: none; color: #333; font-size: 1.2rem;
             cursor: pointer; padding: 0 0 0 15px; line-height: 1; transition: 0.2s; opacity: 0;
@@ -87,41 +84,50 @@
         }
         .modal-content {
             background: #0a0a0a; 
-            width: 90vw; max-width: 900px; 
+            width: 90vw; max-width: 1200px; 
+            height: 85vh; /* Taller height */
             padding: 30px; border-radius: 16px;
             display: flex; gap: 20px; border: 1px solid #333; 
-            height: 500px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             box-sizing: border-box; overflow: hidden;
         }
         
-        .calendar-section { flex: 2; display: flex; flex-direction: column; min-width: 0; }
-        #cal-month-header { margin: 0 0 15px 0; color: var(--accent); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; }
+        .calendar-section { flex: 3; display: flex; flex-direction: column; min-width: 0; }
+        #cal-month-header { margin: 0 0 15px 0; color: var(--accent); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; }
 
         .calendar-grid { 
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; 
-            overflow-y: auto; padding-right: 5px;
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            /* This forces rows to stretch to fill the container height */
+            grid-auto-rows: 1fr; 
+            gap: 8px; 
+            flex-grow: 1; /* Make grid take all remaining height */
+            overflow: hidden; /* Prevent scrolling */
         }
+        
         .day-cell { 
-            aspect-ratio: 1; background: #111; border-radius: 4px; 
+            background: #111; border-radius: 6px; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 0.9rem; cursor: pointer; border: 1px solid #222; 
+            font-size: 1.2rem; /* Bigger text */
+            cursor: pointer; border: 1px solid #222; 
             transition: 0.1s;
         }
+        /* Removed 'aspect-ratio: 1' so cells can be rectangular if needed */
+        
         .day-cell.perfect { background: var(--success) !important; color: #000; font-weight: bold; }
         .day-cell.today { border: 2px solid #fff; box-shadow: 0 0 15px rgba(255,255,255,0.15); z-index: 2; }
-        .day-cell:hover, .day-cell.selected { border-color: var(--accent); background: #222; transform: scale(1.05); }
+        .day-cell:hover, .day-cell.selected { border-color: var(--accent); background: #222; transform: scale(1.02); }
         
         .details-pane { 
             flex: 1; background: #050505; padding: 20px; border-radius: 8px; border: 1px solid #222;
-            display: flex; flex-direction: column; min-width: 250px;
+            display: flex; flex-direction: column; min-width: 300px;
         }
         
         /* History List Styles */
         #det-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
         .hist-item { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 10px 0; border-bottom: 1px solid #222; font-size: 0.9rem; 
+            padding: 12px 0; border-bottom: 1px solid #222; font-size: 1rem; 
         }
         .hist-del-btn {
             background: none; border: none; color: #444; cursor: pointer; font-size: 1.2rem; opacity: 0.5;
@@ -341,7 +347,6 @@
             const cal = document.getElementById('calendar'); cal.innerHTML = '';
             const now = new Date();
             
-            // Set Month Header
             document.getElementById('cal-month-header').innerText = now.toLocaleDateString(undefined, {month: 'long', year: 'numeric'});
 
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -427,8 +432,6 @@
             } 
         }
 
-        // Keep arrow key navigation for power users (PC keyboard), 
-        // but now it relies on focus-visible so mouse clicks don't trigger it visually.
         window.addEventListener('keydown', (e) => {
             const f = document.querySelectorAll('.card, .btn, .day-cell, .nav-arrow');
             let i = Array.from(f).indexOf(document.activeElement);
