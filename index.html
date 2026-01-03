@@ -78,14 +78,26 @@
             display: none; justify-content: center; align-items: center; z-index: 5000;
         }
         .modal-content {
-            background: var(--surface); width: 90%; max-width: 1000px; padding: 40px; border-radius: 20px;
-            display: flex; gap: 30px; border: 1px solid #333; height: 500px;
+            background: var(--surface); 
+            width: 95vw; /* Use Viewport Width to ensure it fits screen */
+            max-width: 1100px; 
+            padding: 30px; 
+            border-radius: 20px;
+            display: flex; gap: 20px; border: 1px solid #333; 
+            height: 500px;
+            box-sizing: border-box; /* Ensures padding doesn't break width */
+            overflow: hidden; /* Prevents outer scrollbars */
         }
         
-        .calendar-section { flex: 2; display: flex; flex-direction: column; }
-        #cal-month-header { margin: 0 0 20px 0; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        /* Added min-width: 0 to force flex items to shrink properly within container */
+        .calendar-section { flex: 2; display: flex; flex-direction: column; min-width: 0; }
+        
+        #cal-month-header { margin: 0 0 20px 0; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; white-space: nowrap; }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; overflow-y: auto; }
+        .calendar-grid { 
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; 
+            overflow-y: auto; padding-right: 5px; /* Tiny padding for scrollbar space */
+        }
         .day-cell { 
             aspect-ratio: 1; background: #000; border-radius: 5px; 
             display: flex; align-items: center; justify-content: center; 
@@ -98,7 +110,10 @@
         
         .day-cell:hover, .day-cell.selected { border-color: var(--accent); background: #222; }
         
-        .details-pane { flex: 1; background: #050505; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; }
+        .details-pane { 
+            flex: 1; background: #050505; padding: 20px; border-radius: 10px; 
+            display: flex; flex-direction: column; min-width: 250px; /* Prevent it from getting too squished */
+        }
         
         /* History List Styles */
         #det-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
@@ -208,7 +223,6 @@
         }
         
         function getDateString(dateObj) {
-            // Helper to get local date string YYYY-MM-DD
             const offset = dateObj.getTimezoneOffset() * 60000;
             return (new Date(dateObj - offset)).toISOString().split('T')[0];
         }
@@ -311,12 +325,9 @@
         function toggleModal(s) {
             document.getElementById('modal').style.display = s ? 'flex' : 'none';
             if(s) {
-                // Auto-select TODAY when opening
                 const now = new Date();
                 const todayStr = getDateString(now);
                 selectedHistoryDate = todayStr;
-                
-                // Render calendar and show details for today immediately
                 renderCalendar();
                 showHistoryDetails(todayStr, now.getDate());
             }
@@ -330,10 +341,9 @@
             document.getElementById('cal-month-header').innerText = now.toLocaleDateString(undefined, {month: 'long', year: 'numeric'});
 
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            const currentDay = now.getDate(); // Get today's number (e.g., 3)
+            const currentDay = now.getDate();
             
             for(let d=1; d<=daysInMonth; d++) {
-                // Construct date string manually to match storage keys
                 const ds = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 
                 const data = history[ds];
@@ -341,13 +351,12 @@
                 let classes = 'day-cell';
                 
                 if (data?.score >= 1) classes += ' perfect';
-                if (d === currentDay) classes += ' today'; // Highlight Today
+                if (d === currentDay) classes += ' today';
                 if (selectedHistoryDate === ds) classes += ' selected';
                 
                 cell.className = classes;
                 cell.innerText = d;
                 
-                // Click to view details
                 cell.onclick = () => showHistoryDetails(ds, d);
                 
                 cal.appendChild(cell);
@@ -356,7 +365,7 @@
 
         function showHistoryDetails(dateStr, dayNum) {
             selectedHistoryDate = dateStr;
-            renderCalendar(); // Re-render to show selected state
+            renderCalendar();
             
             const data = history[dateStr];
             document.getElementById('det-date').innerText = `Details for Day ${dayNum}`;
