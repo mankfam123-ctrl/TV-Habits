@@ -81,9 +81,21 @@
             background: var(--surface); width: 90%; max-width: 1000px; padding: 40px; border-radius: 20px;
             display: flex; gap: 30px; border: 1px solid #333; height: 500px;
         }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; flex: 2; overflow-y: auto; }
-        .day-cell { aspect-ratio: 1; background: #000; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; border: 1px solid #222; }
+        
+        .calendar-section { flex: 2; display: flex; flex-direction: column; }
+        #cal-month-header { margin: 0 0 20px 0; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; overflow-y: auto; }
+        .day-cell { 
+            aspect-ratio: 1; background: #000; border-radius: 5px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 0.8rem; cursor: pointer; border: 1px solid #222; 
+        }
         .day-cell.perfect { background: var(--success) !important; color: #000; font-weight: bold; }
+        
+        /* New Style for TODAY */
+        .day-cell.today { border: 2px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        
         .day-cell:hover, .day-cell.selected { border-color: var(--accent); background: #222; }
         
         .details-pane { flex: 1; background: #050505; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; }
@@ -141,7 +153,10 @@
 
     <div id="modal" onclick="toggleModal(false)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="calendar-grid" id="calendar"></div>
+            <div class="calendar-section">
+                <h2 id="cal-month-header"></h2>
+                <div class="calendar-grid" id="calendar"></div>
+            </div>
             <div class="details-pane">
                 <h3 id="det-date" style="color: var(--accent)">Select Day</h3>
                 <ul id="det-list"></ul>
@@ -193,7 +208,9 @@
         }
         
         function getDateString(dateObj) {
-            return dateObj.toISOString().split('T')[0];
+            // Helper to get local date string YYYY-MM-DD
+            const offset = dateObj.getTimezoneOffset() * 60000;
+            return (new Date(dateObj - offset)).toISOString().split('T')[0];
         }
 
         function changeDate(dir) {
@@ -293,21 +310,41 @@
 
         function toggleModal(s) {
             document.getElementById('modal').style.display = s ? 'flex' : 'none';
-            if(s) renderCalendar();
+            if(s) {
+                // Auto-select TODAY when opening
+                const now = new Date();
+                const todayStr = getDateString(now);
+                selectedHistoryDate = todayStr;
+                
+                // Render calendar and show details for today immediately
+                renderCalendar();
+                showHistoryDetails(todayStr, now.getDate());
+            }
         }
 
         function renderCalendar() {
             const cal = document.getElementById('calendar'); cal.innerHTML = '';
             const now = new Date();
+            
+            // Set Month Header
+            document.getElementById('cal-month-header').innerText = now.toLocaleDateString(undefined, {month: 'long', year: 'numeric'});
+
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const currentDay = now.getDate(); // Get today's number (e.g., 3)
             
             for(let d=1; d<=daysInMonth; d++) {
+                // Construct date string manually to match storage keys
                 const ds = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                
                 const data = history[ds];
                 const cell = document.createElement('div');
-                cell.className = 'day-cell' + (data?.score >= 1 ? ' perfect' : '');
-                if (selectedHistoryDate === ds) cell.classList.add('selected');
+                let classes = 'day-cell';
                 
+                if (data?.score >= 1) classes += ' perfect';
+                if (d === currentDay) classes += ' today'; // Highlight Today
+                if (selectedHistoryDate === ds) classes += ' selected';
+                
+                cell.className = classes;
                 cell.innerText = d;
                 
                 // Click to view details
@@ -346,18 +383,13 @@
 
             const rec = history[dateStr];
             if(rec) {
-                // Filter out the item
                 rec.items = rec.items.filter(x => x !== itemName);
-                
-                // Update score (approximate based on current habit count to keep consistent)
                 rec.score = habits.length > 0 ? rec.items.length / habits.length : 0;
-                
                 localStorage.setItem('hist-v5', JSON.stringify(history));
                 
-                // Refresh views
                 showHistoryDetails(dateStr, parseInt(dateStr.split('-')[2]));
                 renderCalendar();
-                render(); // In case we are currently viewing this day in the background
+                render(); 
             }
         }
 
