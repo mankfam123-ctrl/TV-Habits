@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TV Habit Tracker</title>
+    <title>Private TV Habit Tracker</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -26,23 +26,48 @@
             overflow: hidden;
         }
 
-        #header {
+        /* PIN Overlay Styles */
+        #pin-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #pin-overlay h1 { font-size: 3rem; margin-bottom: 20px; }
+        
+        #pin-input {
+            background: var(--card-bg);
+            border: 4px solid var(--accent-color);
+            color: white;
+            font-size: 4rem;
             text-align: center;
-            margin-top: 40px;
+            padding: 20px;
+            width: 300px;
+            border-radius: 15px;
+            letter-spacing: 15px;
         }
 
-        #date-display {
-            font-size: 3rem;
-            font-weight: bold;
-            margin-bottom: 10px;
+        #pin-input:focus {
+            outline: none;
+            border-color: white;
         }
 
-        #day-display {
-            font-size: 1.5rem;
-            color: #aaa;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+        /* Main Content Styles */
+        #main-content {
+            display: none; /* Hidden until PIN is correct */
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
         }
+
+        #header { text-align: center; margin-top: 40px; }
+        #date-display { font-size: 3rem; font-weight: bold; margin-bottom: 10px; }
+        #day-display { font-size: 1.5rem; color: #aaa; text-transform: uppercase; letter-spacing: 2px; }
 
         #habit-container {
             margin-top: 50px;
@@ -64,7 +89,6 @@
             cursor: pointer;
         }
 
-        /* TV Focus State */
         .habit-card:focus, .nav-item:focus {
             outline: none;
             border: var(--focus-border);
@@ -72,19 +96,9 @@
             background: var(--accent-color);
         }
 
-        .habit-card.completed {
-            background: var(--success-color);
-        }
-
-        .habit-name {
-            font-size: 1.8rem;
-            display: block;
-            margin-bottom: 10px;
-        }
-
-        .status-icon {
-            font-size: 2.5rem;
-        }
+        .habit-card.completed { background: var(--success-color); }
+        .habit-name { font-size: 1.8rem; display: block; margin-bottom: 10px; }
+        .status-icon { font-size: 2.5rem; }
 
         #controls {
             position: fixed;
@@ -106,108 +120,13 @@
 </head>
 <body>
 
-    <div id="header">
-        <div id="date-display"></div>
-        <div id="day-display"></div>
+    <div id="pin-overlay">
+        <h1>ENTER PIN</h1>
+        <input type="password" id="pin-input" maxlength="4" inputmode="numeric">
+        <p style="margin-top: 20px; color: #666;">Use remote to enter code</p>
     </div>
 
-    <div id="habit-container">
-        </div>
-
-    <div id="controls">
-        <button class="nav-item" onclick="addNewHabit()">+ ADD NEW HABIT</button>
-        <button class="nav-item" onclick="clearHabits()">CLEAR ALL</button>
-    </div>
-
-    <script>
-        let habits = JSON.parse(localStorage.getItem('tv-habits')) || [
-            { id: 1, name: 'Drink Water', done: false },
-            { id: 2, name: 'Exercise', done: false }
-        ];
-
-        function updateDateTime() {
-            const now = new Date();
-            const options = { month: 'long', day: 'numeric', year: 'numeric' };
-            document.getElementById('date-display').innerText = now.toLocaleDateString(undefined, options);
-            document.getElementById('day-display').innerText = now.toLocaleDateString(undefined, { weekday: 'long' });
-        }
-
-        function renderHabits() {
-            const container = document.getElementById('habit-container');
-            container.innerHTML = '';
-
-            habits.forEach((habit, index) => {
-                const card = document.createElement('div');
-                card.className = `habit-card ${habit.done ? 'completed' : ''}`;
-                card.tabIndex = 0; // Makes it focusable via remote
-                card.innerHTML = `
-                    <span class="habit-name">${habit.name}</span>
-                    <span class="status-icon">${habit.done ? '✓' : '○'}</span>
-                `;
-                
-                // Toggle habit on "Enter" or Click
-                const toggle = () => {
-                    habit.done = !habit.done;
-                    saveAndRender();
-                };
-
-                card.onclick = toggle;
-                card.onkeydown = (e) => { if(e.key === 'Enter') toggle(); };
-                
-                container.appendChild(card);
-            });
-        }
-
-        function addNewHabit() {
-            const name = prompt("Enter habit name:");
-            if (name) {
-                habits.push({ id: Date.now(), name: name, done: false });
-                saveAndRender();
-            }
-        }
-
-        function clearHabits() {
-            if(confirm("Clear all habits?")) {
-                habits = [];
-                saveAndRender();
-            }
-        }
-
-        function saveAndRender() {
-            localStorage.setItem('tv-habits', JSON.stringify(habits));
-            renderHabits();
-        }
-
-        // Handle D-Pad Navigation for TV Remotes
-        window.addEventListener('keydown', (e) => {
-            const focusable = document.querySelectorAll('.habit-card, .nav-item');
-            let index = Array.from(focusable).indexOf(document.activeElement);
-
-            if (e.key === 'ArrowRight') {
-                index = (index + 1) % focusable.length;
-                focusable[index].focus();
-            } else if (e.key === 'ArrowLeft') {
-                index = (index - 1 + focusable.length) % focusable.length;
-                focusable[index].focus();
-            } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                // Simple vertical jump for this layout
-                const nextRow = e.key === 'ArrowDown' ? index + 3 : index - 3;
-                if (focusable[nextRow]) focusable[nextRow].focus();
-            }
-        });
-
-        // Initialize
-        updateDateTime();
-        renderHabits();
-        setInterval(updateDateTime, 60000); // Update clock every minute
-        
-        // Auto-focus first habit for remote control start
-        setTimeout(() => {
-            if(document.querySelector('.habit-card')) {
-                document.querySelector('.habit-card').focus();
-            }
-        }, 500);
-
-    </script>
-</body>
-</html>
+    <div id="main-content">
+        <div id="header">
+            <div id="date-display"></div>
+            <div id
