@@ -193,6 +193,19 @@
             border-color: var(--selected-border); box-shadow: 0 0 10px var(--selected-glow);
             background: var(--selected-bg); transform: scale(1.05); z-index: 4; color: var(--text); font-weight: bold;
         }
+        
+        /* NOTE INDICATOR DOT */
+        .day-cell.has-note::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 5px var(--accent);
+        }
 
         .details-pane { 
             flex: 1; background: var(--bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border);
@@ -390,6 +403,13 @@
                 if (!history[selectedHistoryDate]) history[selectedHistoryDate] = { score: 0, items: [], note: "" };
                 history[selectedHistoryDate].note = e.target.value;
                 localStorage.setItem('hist-v5', JSON.stringify(history));
+                
+                // VISUAL UPDATE: Show Dot instantly on current cell
+                const cell = document.querySelector('.day-cell.selected');
+                if(cell) {
+                    if(e.target.value.trim() !== "") cell.classList.add('has-note');
+                    else cell.classList.remove('has-note');
+                }
             }
         });
 
@@ -570,6 +590,9 @@
                 if (isCurrentMonth && d === currentDay) classes += ' today';
                 if (selectedHistoryDate === ds) classes += ' selected';
                 
+                // INDICATOR CHECK
+                if (data?.note && data.note.trim() !== "") classes += ' has-note';
+                
                 cell.className = classes;
                 cell.innerText = d;
                 
@@ -638,7 +661,6 @@
             grid.innerHTML = '';
 
             Object.entries(stats).forEach(([name, count]) => {
-                // Determine Tier
                 let tierClass = 'rank-novice';
                 let tierName = 'NOVICE';
                 if(count >= 365) { tierClass = 'rank-master'; tierName = 'MASTER'; }
