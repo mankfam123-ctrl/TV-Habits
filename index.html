@@ -322,4 +322,21 @@
             }
         }
         function resetDay() { 
-            if(
+            if(confirm("This will uncheck all boxes for today. Continue?")) { 
+                habits.forEach(h=>h.done=false); 
+                save(); 
+                render();
+            } 
+        }
+
+        // TV Nav
+        window.addEventListener('keydown', (e) => {
+            const f = document.querySelectorAll('.card, .btn, .day-cell, .nav-arrow');
+            let i = Array.from(f).indexOf(document.activeElement);
+            if(e.key==='ArrowRight'||e.key==='ArrowDown') i=(i+1)%f.length;
+            if(e.key==='ArrowLeft'||e.key==='ArrowUp') i=(i-1+f.length)%f.length;
+            if(f[i]) f[i].focus();
+        });
+    </script>
+</body>
+</html>
