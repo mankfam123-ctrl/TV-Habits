@@ -100,7 +100,6 @@
         .calendar-section { flex: 3; display: flex; flex-direction: column; min-width: 0; }
         #cal-month-header { margin: 0 0 10px 0; color: var(--accent); font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* Weekday Headers */
         .weekdays-grid {
             display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;
             padding: 0 20px; text-align: center; 
@@ -114,7 +113,7 @@
             gap: 10px; 
             flex-grow: 1; 
             overflow: hidden; 
-            padding: 20px; /* Safe padding for zoom effects */
+            padding: 20px; 
         }
         
         .day-cell { 
@@ -127,9 +126,33 @@
         }
         
         .day-cell.perfect { background: var(--success) !important; color: #000; font-weight: bold; }
-        .day-cell.today { border: 3px solid #fff; box-shadow: 0 0 15px rgba(255,255,255,0.3); z-index: 2; }
-        .day-cell:hover, .day-cell.selected { border-color: var(--accent); background: #222; transform: scale(1.05); z-index: 3; }
         
+        /* === UPDATED AESTHETICS FOR TODAY AND SELECTED === */
+
+        /* TODAY: Bright Blue/Cyan Glow */
+        .day-cell.today { 
+            border: 2px solid var(--accent); 
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4); /* Cyan glow rgba(0, 242, 255, 0.4) */
+            z-index: 2; 
+            color: var(--accent); font-weight: bold;
+        }
+        
+        /* HOVER: Standard blue border */
+        .day-cell:hover { 
+            border-color: var(--accent); background: #222; transform: scale(1.05); z-index: 3; 
+        }
+
+        /* SELECTED: Bright White Glow (Overrides Today/Hover) */
+        .day-cell.selected { 
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.3);
+            background: #222;
+            transform: scale(1.05); 
+            z-index: 4; 
+            color: #fff; font-weight: bold;
+        }
+        /* ================================================= */
+
         .details-pane { 
             flex: 1; background: #050505; padding: 25px; border-radius: 12px; border: 1px solid #222;
             display: flex; flex-direction: column; min-width: 320px;
@@ -192,11 +215,9 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="calendar-section">
                 <h2 id="cal-month-header"></h2>
-                
                 <div class="weekdays-grid">
                     <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
                 </div>
-
                 <div class="calendar-grid" id="calendar"></div>
             </div>
             <div class="details-pane">
@@ -369,10 +390,8 @@
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
             const currentDay = now.getDate();
             
-            // Calculate Day Offset (0=Sun, 1=Mon...)
             const firstDayIndex = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
 
-            // Add Empty Cells for days before the 1st
             for(let i=0; i<firstDayIndex; i++) {
                 const empty = document.createElement('div');
                 cal.appendChild(empty);
