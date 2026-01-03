@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Habit Tracker</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --accent-color: #3d5afe;
+            --success-color: #4caf50;
+            --focus-border: 4px solid #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #header {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        #date-display {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #day-display {
+            font-size: 1.5rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #habit-container {
+            margin-top: 50px;
+            width: 80%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .habit-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            width: 250px;
+            text-align: center;
+            transition: transform 0.2s;
+            border: 4px solid transparent;
+            cursor: pointer;
+        }
+
+        /* TV Focus State */
+        .habit-card:focus, .nav-item:focus {
+            outline: none;
+            border: var(--focus-border);
+            transform: scale(1.1);
+            background: var(--accent-color);
+        }
+
+        .habit-card.completed {
+            background: var(--success-color);
+        }
+
+        .habit-name {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .status-icon {
+            font-size: 2.5rem;
+        }
+
+        #controls {
+            position: fixed;
+            bottom: 50px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-item {
+            background: var(--card-bg);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            border: 4px solid transparent;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <div id="date-display"></div>
+        <div id="day-display"></div>
+    </div>
+
+    <div id="habit-container">
+        </div>
+
+    <div id="controls">
+        <button class="nav-item" onclick="addNewHabit()">+ ADD NEW HABIT</button>
+        <button class="nav-item" onclick="clearHabits()">CLEAR ALL</button>
+    </div>
+
+    <script>
+        let habits = JSON.parse(localStorage.getItem('tv-habits')) || [
+            { id: 1, name: 'Drink Water', done: false },
+            { id: 2, name: 'Exercise', done: false }
+        ];
+
+        function updateDateTime() {
+            const now = new Date();
+            const options = { month: 'long', day: 'numeric', year: 'numeric' };
+            document.getElementById('date-display').innerText = now.toLocaleDateString(undefined, options);
+            document.getElementById('day-display').innerText = now.toLocaleDateString(undefined, { weekday: 'long' });
+        }
+
+        function renderHabits() {
+            const container = document.getElementById('habit-container');
+            container.innerHTML = '';
+
+            habits.forEach((habit, index) => {
+                const card = document.createElement('div');
+                card.className = `habit-card ${habit.done ? 'completed' : ''}`;
+                card.tabIndex = 0; // Makes it focusable via remote
+                card.innerHTML = `
+                    <span class="habit-name">${habit.name}</span>
+                    <span class="status-icon">${habit.done ? '✓' : '○'}</span>
+                `;
+                
+                // Toggle habit on "Enter" or Click
+                const toggle = () => {
+                    habit.done = !habit.done;
+                    saveAndRender();
+                };
+
+                card.onclick = toggle;
+                card.onkeydown = (e) => { if(e.key === 'Enter') toggle(); };
+                
+                container.appendChild(card);
+            });
+        }
+
+        function addNewHabit() {
+            const name = prompt("Enter habit name:");
+            if (name) {
+                habits.push({ id: Date.now(), name: name, done: false });
+                saveAndRender();
+            }
+        }
+
+        function clearHabits() {
+            if(confirm("Clear all habits?")) {
+                habits = [];
+                saveAndRender();
+            }
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('tv-habits', JSON.stringify(habits));
+            renderHabits();
+        }
+
+        // Handle D-Pad Navigation for TV Remotes
+        window.addEventListener('keydown', (e) => {
+            const focusable = document.querySelectorAll('.habit-card, .nav-item');
+            let index = Array.from(focusable).indexOf(document.activeElement);
+
+            if (e.key === 'ArrowRight') {
+                index = (index + 1) % focusable.length;
+                focusable[index].focus();
+            } else if (e.key === 'ArrowLeft') {
+                index = (index - 1 + focusable.length) % focusable.length;
+                focusable[index].focus();
+            } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                // Simple vertical jump for this layout
+                const nextRow = e.key === 'ArrowDown' ? index + 3 : index - 3;
+                if (focusable[nextRow]) focusable[nextRow].focus();
+            }
+        });
+
+        // Initialize
+        updateDateTime();
+        renderHabits();
+        setInterval(updateDateTime, 60000); // Update clock every minute
+        
+        // Auto-focus first habit for remote control start
+        setTimeout(() => {
+            if(document.querySelector('.habit-card')) {
+                document.querySelector('.habit-card').focus();
+            }
+        }, 500);
+
+    </script>
+</body>
+</html>
