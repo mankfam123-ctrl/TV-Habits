@@ -21,7 +21,8 @@
         #pulse-bar {
             width: 100%; background: #000; padding: 12px 0;
             border-bottom: 1px solid #222; display: flex;
-            justify-content: space-around; font-size: 0.8rem;
+            justify-content: center; /* Centered now that there is only one item */
+            font-size: 0.8rem;
             text-transform: uppercase; letter-spacing: 2px; color: var(--accent);
         }
 
@@ -36,29 +37,26 @@
         }
 
         /* --- MAIN UI --- */
-        #main-ui { display: none; width: 95%; max-width: 1200px; padding: 30px; flex-direction: column; }
+        #main-ui { display: none; width: 95%; max-width: 800px; padding: 30px; flex-direction: column; }
         
-        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; }
+        /* HEADER - Centered Date Nav */
+        .header-flex { display: flex; justify-content: center; align-items: flex-end; margin-bottom: 40px; }
         
-        /* DATE NAV */
         .date-nav { display: flex; align-items: center; gap: 20px; }
+        
         .nav-arrow {
             background: transparent; border: 1px solid #333; color: var(--accent);
             font-size: 1.5rem; cursor: pointer; padding: 10px 15px; border-radius: 8px;
             transition: 0.2s; user-select: none;
         }
         .nav-arrow:hover { background: var(--accent); color: #000; }
+        
         .date-wrapper { text-align: center; }
-
         #date-header { font-size: 4rem; font-weight: 900; margin: 0; letter-spacing: -3px; line-height: 1; }
         #day-header { color: var(--accent); margin:0; letter-spacing:3px; font-size: 1.2rem; }
-        
-        .stats-box { text-align: right; }
-        .stat-val { font-size: 2rem; font-weight: bold; color: var(--success); }
-        .stat-lbl { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; }
 
         /* --- HABITS --- */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         
         .card {
             background: var(--surface); padding: 20px 25px; border-radius: 15px; border: 1px solid #222;
@@ -74,12 +72,6 @@
             cursor: pointer; padding: 0 0 0 15px; line-height: 1; transition: 0.2s;
         }
         .delete-btn:hover { color: var(--danger); transform: scale(1.1); }
-
-        /* --- GRAPH AREA --- */
-        #performance-section { margin-top: 40px; background: var(--surface); padding: 20px; border-radius: 15px; border: 1px solid #222; }
-        .graph-container { display: flex; align-items: flex-end; height: 100px; gap: 10px; margin-top: 20px; }
-        .bar { flex: 1; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; transition: 0.5s; position: relative; }
-        .bar:hover::after { content: attr(data-label); position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.6rem; color: white; }
 
         /* --- MODAL --- */
         #modal {
@@ -100,14 +92,14 @@
             border: 1px solid #333; cursor: pointer; font-weight: bold; margin-top: 20px;
         }
         .btn:focus { background: var(--accent); color: #000; outline: none; }
+        
+        .controls { display:flex; gap:10px; justify-content: center; margin-top: 40px;}
     </style>
 </head>
 <body>
 
     <div id="pulse-bar">
         <span id="countdown-timer">Goal Loading...</span>
-        <span>•</span>
-        <span id="year-progress">Year Progress: 0%</span>
     </div>
 
     <div id="lock-screen">
@@ -124,21 +116,11 @@
                 </div>
                 <button class="nav-arrow" onclick="changeDate(1)">&#9654;</button>
             </div>
-
-            <div class="stats-box">
-                <div id="streak-val" class="stat-val">0</div>
-                <div class="stat-lbl">Power Streak</div>
             </div>
-        </div>
 
         <div class="grid" id="habit-grid"></div>
 
-        <div id="performance-section">
-            <div class="stat-lbl">7-Day Performance Trend</div>
-            <div class="graph-container" id="trend-graph"></div>
-        </div>
-
-        <div style="display:flex; gap:10px;">
+        <div class="controls">
             <button class="btn" onclick="toggleModal(true)">ANALYSIS</button>
             <button class="btn" onclick="addHabit()">+ HABIT</button>
             <button class="btn" onclick="resetDay()">RESET PROGRESS</button>
@@ -175,7 +157,6 @@
             updateUrgency();
             checkDayReset();
             render();
-            renderGraph();
         }
 
         function getViewDate() {
@@ -198,11 +179,7 @@
             const diff = GOAL_DATE - now;
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             document.getElementById('countdown-timer').innerText = `T-MINUS ${days} DAYS UNTIL MISSION`;
-            
-            const start = new Date(now.getFullYear(), 0, 1);
-            const end = new Date(now.getFullYear() + 1, 0, 1);
-            const prog = ((now - start) / (end - start) * 100).toFixed(1);
-            document.getElementById('year-progress').innerText = `Year Progress: ${prog}%`;
+            // Removed Year Progress calculation
         }
 
         function render() {
@@ -232,7 +209,6 @@
                 card.className = `card ${isDone ? 'done' : ''}`;
                 card.tabIndex = 0;
                 
-                // Content Structure: Name | Check | Delete
                 card.innerHTML = `
                     <div style="flex-grow:1">${h.name}</div>
                     <div style="display:flex; align-items:center;">
@@ -240,17 +216,15 @@
                     </div>
                 `;
 
-                // Add delete button programmatically to handle events safely
                 const delBtn = document.createElement('button');
                 delBtn.innerHTML = '&times;';
                 delBtn.className = 'delete-btn';
                 delBtn.title = "Delete Habit";
                 delBtn.onclick = (e) => {
-                    e.stopPropagation(); // Prevents clicking the card background
+                    e.stopPropagation();
                     deleteHabit(index);
                 };
 
-                // Append delete button to the right side flex container
                 card.querySelector('div:last-child').appendChild(delBtn);
 
                 card.onclick = () => toggleHabit(index, h.name, viewDateStr);
@@ -258,7 +232,7 @@
                 
                 grid.appendChild(card);
             });
-            updateStats();
+            // Removed updateStats() call
         }
 
         function toggleHabit(index, name, dateStr) {
@@ -281,12 +255,11 @@
             localStorage.setItem('hist-v5', JSON.stringify(history));
 
             render();
-            renderGraph();
         }
 
         function deleteHabit(index) {
             if(confirm("Are you sure you want to permanently delete this habit?")) {
-                habits.splice(index, 1); // Remove from array
+                habits.splice(index, 1);
                 save();
                 render();
             }
@@ -302,30 +275,7 @@
             localStorage.setItem('hist-v5', JSON.stringify(history));
         }
 
-        function updateStats() {
-            let streak = 0;
-            const dates = Object.keys(history).sort().reverse();
-            for(let d of dates) {
-                if(history[d].score === 1) streak++;
-                else break;
-            }
-            document.getElementById('streak-val').innerText = streak;
-        }
-
-        function renderGraph() {
-            const container = document.getElementById('trend-graph');
-            container.innerHTML = '';
-            for(let i=6; i>=0; i--) {
-                const d = new Date(); d.setDate(d.getDate() - i);
-                const ds = getDateString(d);
-                const score = history[ds] ? history[ds].score : 0;
-                const bar = document.createElement('div');
-                bar.className = 'bar';
-                bar.style.height = (score * 100) + '%';
-                bar.setAttribute('data-label', `${Math.round(score*100)}%`);
-                container.appendChild(bar);
-            }
-        }
+        // Removed updateStats() and renderGraph() functions
 
         function toggleModal(s) {
             document.getElementById('modal').style.display = s ? 'flex' : 'none';
