@@ -22,7 +22,7 @@
             width: 100%; background: #000; padding: 12px 0;
             border-bottom: 1px solid #222; display: flex;
             justify-content: center;
-            font-size: 0.8rem; /* Restored size */
+            font-size: 0.8rem;
             text-transform: uppercase; letter-spacing: 2px; color: var(--accent);
             text-align: center;
         }
@@ -47,7 +47,7 @@
         .date-nav { display: flex; align-items: center; gap: 20px; }
         .nav-arrow {
             background: transparent; border: 1px solid #333; color: var(--text-dim);
-            font-size: 1.5rem; /* Restored size */
+            font-size: 1.5rem;
             cursor: pointer; padding: 10px 15px; border-radius: 8px;
             transition: all 0.2s; user-select: none;
         }
@@ -55,7 +55,6 @@
         
         .date-wrapper { text-align: center; min-width: 200px; }
         
-        /* Restored BIG Fonts */
         #date-header { font-size: 4rem; font-weight: 900; margin: 0; letter-spacing: -3px; line-height: 1; }
         #day-header { color: var(--accent); margin:0; letter-spacing:3px; font-size: 1.2rem; font-weight: 500; }
 
@@ -63,10 +62,10 @@
         .grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         
         .card {
-            background: var(--surface); padding: 20px 25px; /* Restored padding */
+            background: var(--surface); padding: 20px 25px;
             border-radius: 15px; border: 1px solid #222;
             cursor: pointer; transition: all 0.15s ease-out; display: flex; align-items: center; justify-content: space-between;
-            font-size: 1.1rem; /* Slightly larger text */
+            font-size: 1.1rem;
         }
         .card:focus-visible { border-color: var(--accent); outline: none; background: #1a1a1a; transform: translateX(5px); }
         .card:hover { border-color: #444; background: #161616; transform: translateY(-3px); }
@@ -89,10 +88,11 @@
         }
         .modal-content {
             background: #0a0a0a; 
-            width: 90vw; max-width: 1200px; 
-            height: 85vh; 
-            padding: 30px; border-radius: 20px;
-            display: flex; gap: 30px; border: 1px solid #333; 
+            width: 95vw; max-width: 1300px; /* Slightly wider */
+            height: 90vh; /* Slightly taller */
+            padding: 40px; /* Increased padding */
+            border-radius: 20px;
+            display: flex; gap: 40px; border: 1px solid #333; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             box-sizing: border-box; overflow: hidden;
         }
@@ -104,15 +104,16 @@
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
             grid-auto-rows: 1fr; 
-            gap: 8px; 
+            gap: 10px; /* Increased Gap */
             flex-grow: 1; 
             overflow: hidden; 
+            padding: 10px; /* Added internal padding to prevent edge cutting */
         }
         
         .day-cell { 
             background: #111; border-radius: 8px; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 1.4rem; /* Larger numbers */
+            font-size: 1.4rem; 
             cursor: pointer; border: 1px solid #222; 
             transition: 0.1s;
         }
@@ -123,7 +124,7 @@
         
         .details-pane { 
             flex: 1; background: #050505; padding: 25px; border-radius: 12px; border: 1px solid #222;
-            display: flex; flex-direction: column; min-width: 300px;
+            display: flex; flex-direction: column; min-width: 320px;
         }
         
         /* History List Styles */
