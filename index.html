@@ -98,7 +98,17 @@
         }
         
         .calendar-section { flex: 3; display: flex; flex-direction: column; min-width: 0; }
-        #cal-month-header { margin: 0 0 10px 0; color: var(--accent); font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px; }
+        
+        /* New Month Navigation Row */
+        .month-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        
+        #cal-month-header { margin: 0; color: var(--accent); font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .month-arrow {
+            background: transparent; border: none; color: #444; font-size: 1.5rem; cursor: pointer;
+            padding: 5px 15px; transition: 0.2s;
+        }
+        .month-arrow:hover { color: var(--accent); transform: scale(1.2); }
 
         .weekdays-grid {
             display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;
@@ -127,22 +137,17 @@
         
         .day-cell.perfect { background: var(--success) !important; color: #000; font-weight: bold; }
         
-        /* === UPDATED AESTHETICS FOR TODAY AND SELECTED === */
-
-        /* TODAY: Bright Blue/Cyan Glow */
         .day-cell.today { 
             border: 2px solid var(--accent); 
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4); /* Cyan glow rgba(0, 242, 255, 0.4) */
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
             z-index: 2; 
             color: var(--accent); font-weight: bold;
         }
         
-        /* HOVER: Standard blue border */
         .day-cell:hover { 
             border-color: var(--accent); background: #222; transform: scale(1.05); z-index: 3; 
         }
 
-        /* SELECTED: Bright White Glow (Overrides Today/Hover) */
         .day-cell.selected { 
             border-color: #fff;
             box-shadow: 0 0 10px rgba(255,255,255,0.3);
@@ -151,7 +156,6 @@
             z-index: 4; 
             color: #fff; font-weight: bold;
         }
-        /* ================================================= */
 
         .details-pane { 
             flex: 1; background: #050505; padding: 25px; border-radius: 12px; border: 1px solid #222;
@@ -214,7 +218,12 @@
     <div id="modal" onclick="toggleModal(false)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="calendar-section">
-                <h2 id="cal-month-header"></h2>
+                <div class="month-nav">
+                    <button class="month-arrow" onclick="changeMonth(-1)">&#9664;</button>
+                    <h2 id="cal-month-header"></h2>
+                    <button class="month-arrow" onclick="changeMonth(1)">&#9654;</button>
+                </div>
+                
                 <div class="weekdays-grid">
                     <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
                 </div>
@@ -238,6 +247,7 @@
         let habits = JSON.parse(localStorage.getItem('h-v5')) || [];
         let history = JSON.parse(localStorage.getItem('hist-v5')) || {};
         let viewOffset = 0; 
+        let calendarOffset = 0; // Tracks which month we are viewing in modal
         let selectedHistoryDate = null; 
 
         document.getElementById('pin-input').addEventListener('input', (e) => {
@@ -373,6 +383,7 @@
         function toggleModal(s) {
             document.getElementById('modal').style.display = s ? 'flex' : 'none';
             if(s) {
+                calendarOffset = 0; // Reset to current month on open
                 const now = new Date();
                 const todayStr = getDateString(now);
                 selectedHistoryDate = todayStr;
@@ -380,15 +391,28 @@
                 showHistoryDetails(todayStr, now.getDate());
             }
         }
+        
+        function changeMonth(dir) {
+            calendarOffset += dir;
+            renderCalendar();
+        }
 
         function renderCalendar() {
             const cal = document.getElementById('calendar'); cal.innerHTML = '';
+            
+            // Determine which month to show based on offset
             const now = new Date();
+            now.setDate(1); // Set to 1st to avoid overflow issues when skipping months
+            now.setMonth(now.getMonth() + calendarOffset);
             
             document.getElementById('cal-month-header').innerText = now.toLocaleDateString(undefined, {month: 'long', year: 'numeric'});
 
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            const currentDay = now.getDate();
+            
+            // Check if this rendered month is ACTUALLY the real current month for "Today" highlighting
+            const realNow = new Date();
+            const isCurrentMonth = (now.getMonth() === realNow.getMonth() && now.getFullYear() === realNow.getFullYear());
+            const currentDay = realNow.getDate();
             
             const firstDayIndex = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
 
@@ -405,7 +429,10 @@
                 let classes = 'day-cell';
                 
                 if (data?.score >= 1) classes += ' perfect';
-                if (d === currentDay) classes += ' today';
+                
+                // Only highlight today if we are viewing the current month
+                if (isCurrentMonth && d === currentDay) classes += ' today';
+                
                 if (selectedHistoryDate === ds) classes += ' selected';
                 
                 cell.className = classes;
