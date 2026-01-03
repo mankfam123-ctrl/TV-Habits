@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mastery Habit Tracker</title>
+    <title>Mastery Command Center</title>
     <style>
         :root {
             --bg: #050505;
@@ -27,122 +27,89 @@
             overflow-x: hidden;
         }
 
+        /* --- VISION BAR --- */
+        #vision-bar {
+            width: 100%;
+            background: linear-gradient(90deg, #000, #1a1a1a, #000);
+            padding: 10px 0;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            color: var(--accent);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
         /* --- LOCK SCREEN --- */
         #lock-screen {
-            position: fixed;
-            inset: 0;
-            background: var(--bg);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
-        #pin-box {
-            background: var(--surface);
-            padding: 50px;
-            border-radius: 30px;
-            border: 1px solid #333;
-            text-align: center;
+            position: fixed; inset: 0; background: var(--bg);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000;
         }
         #pin-input {
-            background: #000;
-            border: 2px solid var(--accent);
-            color: var(--accent);
-            font-size: 3rem;
-            width: 200px;
-            text-align: center;
-            border-radius: 15px;
-            margin: 20px 0;
+            background: #000; border: 2px solid var(--accent); color: var(--accent);
+            font-size: 3rem; width: 200px; text-align: center; border-radius: 15px; margin: 20px 0; letter-spacing: 10px;
         }
 
         /* --- MAIN UI --- */
         #main-ui { display: none; width: 100%; max-width: 1200px; padding: 40px 20px; flex-direction: column; align-items: center; }
-        
-        header { text-align: center; margin-bottom: 50px; }
+        header { text-align: center; margin-bottom: 40px; }
         #date-header { font-size: 4rem; font-weight: 800; margin: 0; letter-spacing: -2px; }
-        #day-header { color: var(--accent); text-transform: uppercase; letter-spacing: 5px; font-weight: 400; }
+        #day-header { color: var(--accent); text-transform: uppercase; letter-spacing: 5px; margin-bottom: 5px; }
 
         /* --- HABIT CARDS --- */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; width: 100%; }
         .card {
-            background: var(--surface);
-            padding: 30px;
-            border-radius: 20px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            background: var(--surface); padding: 30px; border-radius: 20px; border: 2px solid transparent;
+            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: space-between;
         }
         .card:focus, .card:hover { border-color: var(--focus); background: #1a1a1a; outline: none; transform: translateY(-5px); }
         .card.done { border-color: var(--success); background: rgba(0, 255, 136, 0.05); }
         .card.done .check { color: var(--success); }
-        .habit-info h3 { margin: 0; font-size: 1.5rem; }
-        .check { font-size: 2rem; color: #333; }
+        .check { font-size: 2rem; color: #222; }
 
         /* --- MONTHLY MODAL --- */
         #modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 5000;
-            backdrop-filter: blur(10px);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            display: none; justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(15px);
         }
         .modal-content {
-            background: var(--surface);
-            width: 90%;
-            max-width: 900px;
-            padding: 40px;
-            border-radius: 30px;
-            border: 1px solid #333;
+            background: var(--surface); width: 90%; max-width: 900px; padding: 40px; border-radius: 30px; border: 1px solid #333;
+            display: flex; gap: 30px;
         }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            margin-top: 20px;
+        .calendar-section { flex: 2; }
+        .details-section { 
+            flex: 1; background: #0a0a0a; border-radius: 20px; padding: 20px; 
+            border: 1px solid #222; display: flex; flex-direction: column;
         }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
         .day-cell {
-            aspect-ratio: 1;
-            background: #1a1a1a;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            color: var(--text-dim);
+            aspect-ratio: 1; background: #1a1a1a; border-radius: 8px; border: 2px solid transparent;
+            display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: var(--text-dim); cursor: pointer;
         }
-        .day-cell.has-data { background: #222; }
-        .day-cell.perfect { background: var(--success); color: black; font-weight: bold; }
+        .day-cell:hover, .day-cell:focus { border-color: var(--accent); color: white; outline: none; }
+        .day-cell.perfect { background: var(--success) !important; color: black !important; font-weight: bold; }
         
-        /* --- NAVIGATION --- */
-        .nav-bar { margin-top: 50px; display: flex; gap: 20px; }
+        #detail-list { list-style: none; padding: 0; margin-top: 15px; }
+        #detail-list li { margin-bottom: 10px; padding-left: 20px; position: relative; font-size: 0.9rem; }
+        #detail-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent); }
+
+        .nav-bar { margin-top: 40px; display: flex; gap: 15px; }
         .btn {
-            background: var(--surface);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 12px;
-            border: 1px solid #333;
-            font-weight: bold;
-            cursor: pointer;
+            background: var(--surface); color: white; padding: 15px 30px; border-radius: 12px;
+            border: 1px solid #333; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
         .btn:focus, .btn:hover { background: var(--accent); color: black; outline: none; }
-
     </style>
 </head>
 <body>
 
+    <div id="vision-bar">Mastery Commences Now • LSAT Goal: 170+ • Discipline Equals Freedom</div>
+
     <div id="lock-screen">
         <div id="pin-box">
-            <h1>IDENTITY VERIFIED</h1>
+            <h1>SYSTEM ACCESS</h1>
             <input type="password" id="pin-input" maxlength="4" placeholder="••••" inputmode="numeric">
-            <p style="color: var(--text-dim)">SYSTEM SECURED</p>
         </div>
     </div>
 
@@ -151,38 +118,37 @@
             <p id="day-header"></p>
             <h1 id="date-header"></h1>
         </header>
-
         <div class="grid" id="habit-grid"></div>
-
         <div class="nav-bar">
-            <button class="btn" id="month-btn" onclick="toggleModal(true)">MONTHLY OVERVIEW</button>
-            <button class="btn" onclick="addHabit()">ADD HABIT</button>
-            <button class="btn" onclick="resetDay()" style="color: #ff4444">RESET DAY</button>
+            <button class="btn" onclick="toggleModal(true)">MONTHLY OVERVIEW</button>
+            <button class="btn" onclick="addHabit()">+ NEW HABIT</button>
+            <button class="btn" onclick="resetDay()" style="color:red">RESET</button>
         </div>
     </div>
 
     <div id="modal" onclick="toggleModal(false)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 id="month-title" style="margin-top:0">MONTHLY MASTERY</h2>
-            <div class="calendar-grid" id="calendar"></div>
-            <button class="btn" style="margin-top:30px; width: 100%" onclick="toggleModal(false)">RETURN TO FOCUS</button>
+            <div class="calendar-section">
+                <h2 id="month-year-label" style="color: var(--accent); margin-top:0"></h2>
+                <div class="calendar-grid" id="calendar"></div>
+            </div>
+            <div class="details-section">
+                <h3 id="detail-date" style="margin-top:0; color: var(--accent);">Day Details</h3>
+                <p id="detail-msg" style="font-size: 0.8rem; color: #666;">Hover or select a day to see what you achieved.</p>
+                <ul id="detail-list"></ul>
+            </div>
         </div>
     </div>
 
     <script>
         const PIN = "8472";
-        const pinInput = document.getElementById('pin-input');
+        const GOOGLE_URL = "PASTE_YOUR_URL_HERE";
         
-        // Data Structures
-        let habits = JSON.parse(localStorage.getItem('habits-v2')) || [
-            { id: 1, name: "Deep Work / LSAT", done: false },
-            { id: 2, name: "Physical Training", done: false }
-        ];
-        
-        // History format: { "2026-01-03": 0.75 (75% done) }
-        let history = JSON.parse(localStorage.getItem('habit-history')) || {};
+        // Data Structure: v4 includes 'logs' to track specific names of completed habits
+        let habits = JSON.parse(localStorage.getItem('habits-v4')) || [];
+        let history = JSON.parse(localStorage.getItem('habit-history-v4')) || {};
 
-        // PIN Logic
+        const pinInput = document.getElementById('pin-input');
         pinInput.focus();
         pinInput.addEventListener('input', () => {
             if(pinInput.value === PIN) {
@@ -193,14 +159,13 @@
         });
 
         function init() {
-            renderHabits();
             checkDayReset();
+            render();
         }
 
-        function renderHabits() {
+        function render() {
             const grid = document.getElementById('habit-grid');
             grid.innerHTML = '';
-            
             const now = new Date();
             document.getElementById('date-header').innerText = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
             document.getElementById('day-header').innerText = now.toLocaleDateString(undefined, { weekday: 'long' });
@@ -209,41 +174,30 @@
                 const card = document.createElement('div');
                 card.className = `card ${h.done ? 'done' : ''}`;
                 card.tabIndex = 0;
-                card.innerHTML = `
-                    <div class="habit-info"><h3>${h.name}</h3></div>
-                    <div class="check">${h.done ? '✦' : '✧'}</div>
-                `;
-                card.onclick = () => toggleHabit(h.id);
-                card.onkeydown = (e) => { if(e.key === 'Enter') toggleHabit(h.id); };
+                card.innerHTML = `<h3>${h.name}</h3><div class="check">${h.done ? '✦' : '✧'}</div>`;
+                card.onclick = () => toggleHabit(h);
+                card.onkeydown = (e) => { if(e.key === 'Enter') toggleHabit(h); };
                 grid.appendChild(card);
             });
-            updateHistory();
         }
 
-        function toggleHabit(id) {
-            const h = habits.find(x => x.id === id);
+        function toggleHabit(h) {
             h.done = !h.done;
             save();
+            syncToCloud(h);
         }
 
         function save() {
-            localStorage.setItem('habits-v2', JSON.stringify(habits));
-            updateHistory();
-            renderHabits();
-        }
-
-        function updateHistory() {
+            localStorage.setItem('habits-v4', JSON.stringify(habits));
+            
+            // Record today's data snapshot
             const today = new Date().toISOString().split('T')[0];
-            const completedCount = habits.filter(h => h.done).length;
-            const percent = habits.length > 0 ? completedCount / habits.length : 0;
-            history[today] = percent;
-            localStorage.setItem('habit-history', JSON.stringify(history));
-        }
-
-        function toggleModal(show) {
-            const m = document.getElementById('modal');
-            m.style.display = show ? 'flex' : 'none';
-            if(show) renderCalendar();
+            const completedNames = habits.filter(x => x.done).map(x => x.name);
+            const score = habits.length ? completedNames.length / habits.length : 0;
+            
+            history[today] = { score: score, completed: completedNames };
+            localStorage.setItem('habit-history-v4', JSON.stringify(history));
+            render();
         }
 
         function renderCalendar() {
@@ -252,55 +206,81 @@
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth();
-            
+            document.getElementById('month-year-label').innerText = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            // Padding for start of month
             for(let i=0; i<firstDay; i++) cal.appendChild(document.createElement('div'));
 
             for(let d=1; d<=daysInMonth; d++) {
                 const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const score = history[dateStr] || 0;
+                const dayData = history[dateStr];
                 
                 const cell = document.createElement('div');
                 cell.className = 'day-cell';
                 cell.innerText = d;
+                cell.tabIndex = 0;
                 
-                if(score > 0) {
-                    cell.style.background = `rgba(0, 255, 136, ${score})`;
-                    if(score === 1) cell.classList.add('perfect');
+                if(dayData && dayData.score > 0) {
+                    cell.style.background = `rgba(0, 255, 136, ${dayData.score})`;
+                    if(dayData.score === 1) cell.classList.add('perfect');
                 }
+
+                const showDetails = () => {
+                    document.getElementById('detail-date').innerText = `Day ${d} Log`;
+                    const list = document.getElementById('detail-list');
+                    list.innerHTML = '';
+                    if(dayData && dayData.completed.length > 0) {
+                        dayData.completed.forEach(name => {
+                            const li = document.createElement('li');
+                            li.innerText = name;
+                            list.appendChild(li);
+                        });
+                        document.getElementById('detail-msg').style.display = 'none';
+                    } else {
+                        document.getElementById('detail-msg').innerText = "No activity recorded.";
+                        document.getElementById('detail-msg').style.display = 'block';
+                    }
+                };
+
+                cell.onmouseover = showDetails;
+                cell.onfocus = showDetails;
                 cal.appendChild(cell);
             }
         }
 
-        function checkDayReset() {
-            const lastDate = localStorage.getItem('last-opened-date');
-            const today = new Date().toISOString().split('T')[0];
-            
-            if(lastDate && lastDate !== today) {
-                habits.forEach(h => h.done = false); // Daily Reset
-                save();
-            }
-            localStorage.setItem('last-opened-date', today);
+        function toggleModal(show) {
+            document.getElementById('modal').style.display = show ? 'flex' : 'none';
+            if(show) renderCalendar();
         }
 
         function addHabit() {
-            const n = prompt("Define new habit:");
+            const n = prompt("New Habit:");
             if(n) { habits.push({ id: Date.now(), name: n, done: false }); save(); }
         }
 
-        function resetDay() {
-            if(confirm("Restart today's progress?")) {
+        function checkDayReset() {
+            const today = new Date().toISOString().split('T')[0];
+            if(localStorage.getItem('last-date') !== today) {
                 habits.forEach(h => h.done = false);
+                localStorage.setItem('last-date', today);
                 save();
             }
         }
 
-        // Remote Navigation
+        function resetDay() { if(confirm("Reset?")) { habits.forEach(h=>h.done=false); save(); } }
+
+        function syncToCloud(h) {
+            if(GOOGLE_URL === "PASTE_YOUR_URL_HERE") return;
+            fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({
+                date: new Date().toLocaleDateString(), habitName: h.name, status: h.done ? "Done" : "Undo"
+            })});
+        }
+
+        // TV Navigation
         window.addEventListener('keydown', (e) => {
-            const focusable = document.querySelectorAll('.card, .btn');
+            const focusable = document.querySelectorAll('.card, .btn, .day-cell');
             let i = Array.from(focusable).indexOf(document.activeElement);
             if(e.key === 'ArrowRight' || e.key === 'ArrowDown') i = (i+1)%focusable.length;
             if(e.key === 'ArrowLeft' || e.key === 'ArrowUp') i = (i-1+focusable.length)%focusable.length;
