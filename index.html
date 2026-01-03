@@ -19,10 +19,10 @@
 
         /* --- PULSE BAR (QUOTES) --- */
         #pulse-bar {
-            width: 100%; background: #000; padding: 12px 0;
+            width: 100%; background: #000; padding: 10px 0;
             border-bottom: 1px solid #222; display: flex;
             justify-content: center;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-transform: uppercase; letter-spacing: 2px; color: var(--accent);
             text-align: center;
         }
@@ -35,104 +35,108 @@
         #pin-input {
             background: #000; border: 2px solid var(--accent); color: var(--accent);
             font-size: 3rem; width: 180px; text-align: center; border-radius: 12px;
+            outline: none;
         }
+        #pin-input:focus { box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
 
         /* --- MAIN UI --- */
-        #main-ui { display: none; width: 95%; max-width: 800px; padding: 30px; flex-direction: column; }
+        #main-ui { display: none; width: 100%; max-width: 700px; padding: 30px; flex-direction: column; }
         
         /* HEADER */
-        .header-flex { display: flex; justify-content: center; align-items: flex-end; margin-bottom: 40px; }
-        .date-nav { display: flex; align-items: center; gap: 20px; }
+        .header-flex { display: flex; justify-content: center; align-items: flex-end; margin-bottom: 30px; }
+        .date-nav { display: flex; align-items: center; gap: 15px; }
         .nav-arrow {
-            background: transparent; border: 1px solid #333; color: var(--accent);
-            font-size: 1.5rem; cursor: pointer; padding: 10px 15px; border-radius: 8px;
-            transition: 0.2s; user-select: none;
+            background: transparent; border: 1px solid #333; color: var(--text-dim);
+            font-size: 1.2rem; cursor: pointer; padding: 8px 12px; border-radius: 6px;
+            transition: all 0.2s; user-select: none;
         }
-        .nav-arrow:hover { background: var(--accent); color: #000; }
+        .nav-arrow:hover { background: var(--accent); color: #000; border-color: var(--accent); }
         
-        .date-wrapper { text-align: center; }
-        #date-header { font-size: 4rem; font-weight: 900; margin: 0; letter-spacing: -3px; line-height: 1; }
-        #day-header { color: var(--accent); margin:0; letter-spacing:3px; font-size: 1.2rem; }
+        .date-wrapper { text-align: center; min-width: 200px; }
+        #date-header { font-size: 3rem; font-weight: 800; margin: 0; letter-spacing: -2px; line-height: 1; }
+        #day-header { color: var(--accent); margin:0; letter-spacing:2px; font-size: 1rem; font-weight: 500; }
 
         /* --- HABITS --- */
-        .grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
         
         .card {
-            background: var(--surface); padding: 20px 25px; border-radius: 15px; border: 1px solid #222;
-            cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: space-between;
+            background: var(--surface); padding: 15px 20px; border-radius: 10px; border: 1px solid #222;
+            cursor: pointer; transition: all 0.15s ease-out; display: flex; align-items: center; justify-content: space-between;
         }
-        .card:focus, .card:hover { border-color: var(--accent); outline: none; background: #1a1a1a; transform: translateY(-3px); }
-        .card.done { border-color: var(--success); }
+        
+        /* PC Tweak: Only show the ring on keyboard focus, not mouse click */
+        .card:focus-visible { border-color: var(--accent); outline: none; background: #1a1a1a; transform: translateX(5px); }
+        .card:hover { border-color: #444; background: #161616; transform: translateY(-2px); }
+        
+        .card.done { border-color: rgba(0, 255, 136, 0.3); background: rgba(0, 255, 136, 0.05); }
+        .card.done:hover { border-color: var(--success); }
         .card.done .check { color: var(--success); text-shadow: 0 0 10px var(--success); }
 
         /* Main Screen Delete Button */
         .delete-btn {
-            background: transparent; border: none; color: #333; font-size: 1.5rem;
-            cursor: pointer; padding: 0 0 0 15px; line-height: 1; transition: 0.2s;
+            background: transparent; border: none; color: #333; font-size: 1.2rem;
+            cursor: pointer; padding: 0 0 0 15px; line-height: 1; transition: 0.2s; opacity: 0;
         }
-        .delete-btn:hover { color: var(--danger); transform: scale(1.1); }
+        .card:hover .delete-btn, .card:focus-visible .delete-btn { opacity: 1; }
+        .delete-btn:hover { color: var(--danger); transform: scale(1.2); }
 
         /* --- MODAL --- */
         #modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
             display: none; justify-content: center; align-items: center; z-index: 5000;
         }
         .modal-content {
-            background: var(--surface); 
-            width: 95vw; /* Use Viewport Width to ensure it fits screen */
-            max-width: 1100px; 
-            padding: 30px; 
-            border-radius: 20px;
+            background: #0a0a0a; 
+            width: 90vw; max-width: 900px; 
+            padding: 30px; border-radius: 16px;
             display: flex; gap: 20px; border: 1px solid #333; 
             height: 500px;
-            box-sizing: border-box; /* Ensures padding doesn't break width */
-            overflow: hidden; /* Prevents outer scrollbars */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-sizing: border-box; overflow: hidden;
         }
         
-        /* Added min-width: 0 to force flex items to shrink properly within container */
         .calendar-section { flex: 2; display: flex; flex-direction: column; min-width: 0; }
-        
-        #cal-month-header { margin: 0 0 20px 0; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; white-space: nowrap; }
+        #cal-month-header { margin: 0 0 15px 0; color: var(--accent); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; }
 
         .calendar-grid { 
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; 
-            overflow-y: auto; padding-right: 5px; /* Tiny padding for scrollbar space */
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; 
+            overflow-y: auto; padding-right: 5px;
         }
         .day-cell { 
-            aspect-ratio: 1; background: #000; border-radius: 5px; 
+            aspect-ratio: 1; background: #111; border-radius: 4px; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 0.8rem; cursor: pointer; border: 1px solid #222; 
+            font-size: 0.9rem; cursor: pointer; border: 1px solid #222; 
+            transition: 0.1s;
         }
         .day-cell.perfect { background: var(--success) !important; color: #000; font-weight: bold; }
-        
-        /* New Style for TODAY */
-        .day-cell.today { border: 2px solid #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
-        
-        .day-cell:hover, .day-cell.selected { border-color: var(--accent); background: #222; }
+        .day-cell.today { border: 2px solid #fff; box-shadow: 0 0 15px rgba(255,255,255,0.15); z-index: 2; }
+        .day-cell:hover, .day-cell.selected { border-color: var(--accent); background: #222; transform: scale(1.05); }
         
         .details-pane { 
-            flex: 1; background: #050505; padding: 20px; border-radius: 10px; 
-            display: flex; flex-direction: column; min-width: 250px; /* Prevent it from getting too squished */
+            flex: 1; background: #050505; padding: 20px; border-radius: 8px; border: 1px solid #222;
+            display: flex; flex-direction: column; min-width: 250px;
         }
         
         /* History List Styles */
         #det-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
         .hist-item { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 8px 0; border-bottom: 1px solid #222; font-size: 0.9rem; 
+            padding: 10px 0; border-bottom: 1px solid #222; font-size: 0.9rem; 
         }
         .hist-del-btn {
-            background: none; border: none; color: #444; cursor: pointer; font-size: 1.2rem;
+            background: none; border: none; color: #444; cursor: pointer; font-size: 1.2rem; opacity: 0.5;
         }
-        .hist-del-btn:hover { color: var(--danger); }
+        .hist-del-btn:hover { color: var(--danger); opacity: 1; }
 
         .btn {
-            background: #222; color: #fff; padding: 12px 24px; border-radius: 8px;
-            border: 1px solid #333; cursor: pointer; font-weight: bold; margin-top: 20px;
+            background: #151515; color: #ccc; padding: 10px 20px; border-radius: 6px;
+            border: 1px solid #333; cursor: pointer; font-weight: 600; font-size: 0.85rem;
+            transition: 0.2s;
         }
-        .btn:focus { background: var(--accent); color: #000; outline: none; }
+        .btn:hover { background: #222; color: #fff; border-color: #555; }
+        .btn:focus-visible { border-color: var(--accent); color: #fff; outline: none; }
         
-        .controls { display:flex; gap:10px; justify-content: center; margin-top: 40px;}
+        .controls { display:flex; gap:12px; justify-content: center; margin-top: 30px;}
     </style>
 </head>
 <body>
@@ -173,7 +177,7 @@
                 <div class="calendar-grid" id="calendar"></div>
             </div>
             <div class="details-pane">
-                <h3 id="det-date" style="color: var(--accent)">Select Day</h3>
+                <h3 id="det-date" style="color: var(--accent); margin-top:0;">Select Day</h3>
                 <ul id="det-list"></ul>
             </div>
         </div>
@@ -190,7 +194,7 @@
         let habits = JSON.parse(localStorage.getItem('h-v5')) || [];
         let history = JSON.parse(localStorage.getItem('hist-v5')) || {};
         let viewOffset = 0; 
-        let selectedHistoryDate = null; // Track selected date in modal
+        let selectedHistoryDate = null; 
 
         document.getElementById('pin-input').addEventListener('input', (e) => {
             if(e.target.value === PIN) {
@@ -257,7 +261,7 @@
                 card.tabIndex = 0;
                 
                 card.innerHTML = `
-                    <div style="flex-grow:1">${h.name}</div>
+                    <div style="flex-grow:1; font-weight:500;">${h.name}</div>
                     <div style="display:flex; align-items:center;">
                         <div class="check">${isDone ? '✦' : '✧'}</div>
                     </div>
@@ -423,6 +427,8 @@
             } 
         }
 
+        // Keep arrow key navigation for power users (PC keyboard), 
+        // but now it relies on focus-visible so mouse clicks don't trigger it visually.
         window.addEventListener('keydown', (e) => {
             const f = document.querySelectorAll('.card, .btn, .day-cell, .nav-arrow');
             let i = Array.from(f).indexOf(document.activeElement);
