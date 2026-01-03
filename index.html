@@ -53,11 +53,9 @@
             transition: background 0.3s, color 0.3s;
         }
 
-        /* --- SETTINGS ICON (FIXED POSITION) --- */
+        /* --- SETTINGS ICON --- */
         #settings-btn {
-            position: fixed; 
-            top: 10px; /* Moved up to sit cleanly in the bar */
-            right: 15px;
+            position: fixed; top: 10px; right: 15px;
             background: transparent; border: none; color: var(--text-dim);
             cursor: pointer; z-index: 2000; padding: 5px;
             transition: transform 0.3s, color 0.3s;
@@ -75,8 +73,7 @@
             text-transform: uppercase; letter-spacing: 2px; color: var(--accent);
             text-align: center;
             transition: background 0.3s;
-            position: relative; /* Context for z-index */
-            z-index: 1000;
+            position: relative; z-index: 1000;
         }
 
         /* --- LOCK SCREEN --- */
@@ -219,14 +216,28 @@
             display: flex; flex-direction: column; min-width: 320px;
             transition: background 0.3s;
         }
+
+        /* --- NEW EDITABLE AREA STYLES --- */
+        .info-label { color: var(--text-dim); font-size: 0.8rem; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
         
-        #det-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
+        #day-note {
+            width: 100%; flex-grow: 1;
+            background: var(--surface); border: 1px solid var(--border);
+            color: var(--text); font-family: 'Inter', sans-serif; font-size: 1rem;
+            padding: 15px; border-radius: 8px; resize: none; margin-bottom: 15px;
+            outline: none; box-sizing: border-box;
+            transition: border 0.3s;
+        }
+        #day-note:focus { border-color: var(--accent); }
+        
+        /* History List Styles (Mini) */
+        #det-list { list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; border-top: 1px solid var(--border); }
         .hist-item { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 1rem; 
+            padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-dim);
         }
         .hist-del-btn {
-            background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1.2rem; opacity: 0.5;
+            background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1.1rem; opacity: 0.5;
         }
         .hist-del-btn:hover { color: var(--danger); opacity: 1; }
 
@@ -294,6 +305,10 @@
             </div>
             <div class="details-pane">
                 <h3 id="det-date" style="color: var(--accent); margin-top:0;">Select Day</h3>
+                
+                <textarea id="day-note" placeholder="Add daily information..."></textarea>
+                
+                <div class="info-label">Completed Habits</div>
                 <ul id="det-list"></ul>
             </div>
         </div>
@@ -330,7 +345,6 @@
                 localStorage.setItem('theme', 'light');
             }
         }
-        // Run immediately
         initTheme();
 
         document.getElementById('pin-input').addEventListener('input', (e) => {
@@ -338,6 +352,17 @@
                 document.getElementById('lock-screen').style.display='none';
                 document.getElementById('main-ui').style.display='flex';
                 init();
+            }
+        });
+
+        // Auto-save notes on input
+        document.getElementById('day-note').addEventListener('input', (e) => {
+            if (selectedHistoryDate) {
+                if (!history[selectedHistoryDate]) {
+                    history[selectedHistoryDate] = { score: 0, items: [], note: "" };
+                }
+                history[selectedHistoryDate].note = e.target.value;
+                localStorage.setItem('hist-v5', JSON.stringify(history));
             }
         });
 
@@ -430,7 +455,7 @@
                 localStorage.setItem('h-v5', JSON.stringify(habits));
             }
 
-            if (!history[dateStr]) history[dateStr] = { score: 0, items: [] };
+            if (!history[dateStr]) history[dateStr] = { score: 0, items: [], note: "" };
             
             const histItems = history[dateStr].items;
             const itemIndex = histItems.indexOf(name);
@@ -456,9 +481,14 @@
         function save() {
             localStorage.setItem('h-v5', JSON.stringify(habits));
             const todayStr = getDateString(new Date());
+            
+            // Preserve existing note if updating today
+            const existingNote = history[todayStr] ? history[todayStr].note : "";
+            
             history[todayStr] = { 
                 score: habits.length ? habits.filter(x=>x.done).length / habits.length : 0,
-                items: habits.filter(x=>x.done).map(x=>x.name)
+                items: habits.filter(x=>x.done).map(x=>x.name),
+                note: existingNote
             };
             localStorage.setItem('hist-v5', JSON.stringify(history));
         }
@@ -529,8 +559,14 @@
             const data = history[dateStr];
             document.getElementById('det-date').innerText = `Details for Day ${dayNum}`;
             const list = document.getElementById('det-list');
+            const noteInput = document.getElementById('day-note');
+            
             list.innerHTML = '';
 
+            // Load Note
+            noteInput.value = (data && data.note) ? data.note : "";
+
+            // Load Habits List
             if (data && data.items && data.items.length > 0) {
                 data.items.forEach(item => {
                     const li = document.createElement('li');
@@ -542,7 +578,7 @@
                     list.appendChild(li);
                 });
             } else {
-                list.innerHTML = '<div style="color:var(--text-dim); font-style:italic;">No habits recorded.</div>';
+                list.innerHTML = '<div style="color:var(--text-dim); font-style:italic; font-size:0.8rem; padding:10px 0;">No habits recorded.</div>';
             }
         }
 
@@ -584,6 +620,9 @@
 
         window.addEventListener('keydown', (e) => {
             const f = document.querySelectorAll('.card, .btn, .day-cell, .nav-arrow, #settings-btn');
+            // Prevent capturing textarea typing
+            if (document.activeElement.tagName === 'TEXTAREA') return;
+            
             let i = Array.from(f).indexOf(document.activeElement);
             if(e.key==='ArrowRight'||e.key==='ArrowDown') i=(i+1)%f.length;
             if(e.key==='ArrowLeft'||e.key==='ArrowUp') i=(i-1+f.length)%f.length;
