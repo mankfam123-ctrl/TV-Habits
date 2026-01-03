@@ -3,159 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Mastery Hub</title>
+    <title>Mastery Tracker + Cloud Sync</title>
     <style>
-        :root {
-            --bg: #050505;
-            --surface: #121212;
-            --accent: #00f2ff;
-            --success: #00ff88;
-            --text: #ffffff;
-            --text-dim: #888;
-            --focus: #ffffff;
-        }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* --- LOCK SCREEN --- */
-        #lock-screen {
-            position: fixed;
-            inset: 0;
-            background: var(--bg);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
-        #pin-box {
-            background: var(--surface);
-            padding: 50px;
-            border-radius: 30px;
-            border: 1px solid #333;
-            text-align: center;
-        }
-        #pin-input {
-            background: #000;
-            border: 2px solid var(--accent);
-            color: var(--accent);
-            font-size: 3rem;
-            width: 200px;
-            text-align: center;
-            border-radius: 15px;
-            margin: 20px 0;
-            letter-spacing: 10px;
-        }
-
-        /* --- MAIN UI --- */
+        /* (Styles remain the same as previous aesthetic version) */
+        :root { --bg: #050505; --surface: #121212; --accent: #00f2ff; --success: #00ff88; --text: #ffffff; --text-dim: #888; --focus: #ffffff; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        #lock-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
+        #pin-box { background: var(--surface); padding: 50px; border-radius: 30px; border: 1px solid #333; text-align: center; }
+        #pin-input { background: #000; border: 2px solid var(--accent); color: var(--accent); font-size: 3rem; width: 200px; text-align: center; border-radius: 15px; margin: 20px 0; }
         #main-ui { display: none; width: 100%; max-width: 1200px; padding: 40px 20px; flex-direction: column; align-items: center; }
-        
         header { text-align: center; margin-bottom: 50px; }
-        #date-header { font-size: clamp(2.5rem, 8vw, 4rem); font-weight: 800; margin: 0; letter-spacing: -2px; }
-        #day-header { color: var(--accent); text-transform: uppercase; letter-spacing: 5px; font-weight: 400; margin-bottom: 5px; }
-
-        /* --- HABIT CARDS --- */
+        #date-header { font-size: 4rem; font-weight: 800; margin: 0; letter-spacing: -2px; }
+        #day-header { color: var(--accent); text-transform: uppercase; letter-spacing: 5px; font-weight: 400; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; width: 100%; }
-        .card {
-            background: var(--surface);
-            padding: 35px;
-            border-radius: 20px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .card:focus, .card:hover { border-color: var(--focus); background: #1a1a1a; outline: none; transform: scale(1.02); }
+        .card { background: var(--surface); padding: 30px; border-radius: 20px; border: 2px solid transparent; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: space-between; }
+        .card:focus, .card:hover { border-color: var(--focus); background: #1a1a1a; outline: none; transform: translateY(-5px); }
         .card.done { border-color: var(--success); background: rgba(0, 255, 136, 0.05); }
-        .card.done .check { color: var(--success); }
-        .habit-info h3 { margin: 0; font-size: 1.6rem; letter-spacing: -0.5px; }
-        .check { font-size: 2.2rem; color: #222; transition: 0.3s; }
-
-        /* --- MONTHLY MODAL --- */
-        #modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 5000;
-            backdrop-filter: blur(15px);
-        }
-        .modal-content {
-            background: var(--surface);
-            width: 90%;
-            max-width: 800px;
-            padding: 40px;
-            border-radius: 30px;
-            border: 1px solid #333;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        #month-title { 
-            margin: 0 0 20px 0; 
-            font-size: 2rem; 
-            text-transform: uppercase; 
-            letter-spacing: 3px; 
-            color: var(--accent); 
-        }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 12px;
-        }
-        .day-cell {
-            aspect-ratio: 1;
-            background: #1a1a1a;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            color: var(--text-dim);
-            font-weight: 600;
-        }
-        .day-cell.perfect { background: var(--success); color: black; box-shadow: 0 0 15px var(--success); }
-        
-        /* --- NAVIGATION --- */
-        .nav-bar { margin-top: 60px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-        .btn {
-            background: var(--surface);
-            color: white;
-            padding: 18px 35px;
-            border-radius: 15px;
-            border: 1px solid #333;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: 0.2s;
-        }
-        .btn:focus, .btn:hover { background: var(--accent); color: black; outline: none; border-color: white; }
-
-        @media (max-width: 600px) {
-            #date-header { font-size: 2.5rem; }
-            .card { padding: 20px; }
-        }
+        .habit-info h3 { margin: 0; font-size: 1.5rem; }
+        .check { font-size: 2rem; color: #333; }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(10px); }
+        .modal-content { background: var(--surface); width: 90%; max-width: 900px; padding: 40px; border-radius: 30px; border: 1px solid #333; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px; }
+        .day-cell { aspect-ratio: 1; background: #1a1a1a; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--text-dim); }
+        .day-cell.perfect { background: var(--success); color: black; font-weight: bold; }
+        .nav-bar { margin-top: 50px; display: flex; gap: 20px; }
+        .btn { background: var(--surface); color: white; padding: 15px 30px; border-radius: 12px; border: 1px solid #333; font-weight: bold; cursor: pointer; }
+        .btn:focus, .btn:hover { background: var(--accent); color: black; outline: none; }
     </style>
 </head>
 <body>
 
     <div id="lock-screen">
         <div id="pin-box">
-            <h2 style="letter-spacing: 2px; font-weight: 400;">SYSTEM LOCK</h2>
+            <h1>IDENTITY VERIFIED</h1>
             <input type="password" id="pin-input" maxlength="4" placeholder="••••" inputmode="numeric">
-            <p style="color: var(--text-dim); font-size: 0.8rem;">AUTHORIZED ACCESS ONLY</p>
+            <p style="color: var(--text-dim)">SYSTEM SECURED</p>
         </div>
     </div>
 
@@ -164,72 +46,50 @@
             <p id="day-header"></p>
             <h1 id="date-header"></h1>
         </header>
-
         <div class="grid" id="habit-grid"></div>
-
         <div class="nav-bar">
-            <button class="btn" id="month-btn" onclick="toggleModal(true)">MONTHLY OVERVIEW</button>
-            <button class="btn" onclick="addHabit()">+ NEW HABIT</button>
-            <button class="btn" onclick="resetDay()" style="color: #ff4444; border-color: rgba(255,68,68,0.3)">RESET PROGRESS</button>
+            <button class="btn" onclick="toggleModal(true)">MONTHLY OVERVIEW</button>
+            <button class="btn" onclick="addHabit()">ADD HABIT</button>
         </div>
     </div>
 
     <div id="modal" onclick="toggleModal(false)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 id="month-title"></h2>
+            <h2>MONTHLY MASTERY</h2>
             <div class="calendar-grid" id="calendar"></div>
-            <button class="btn" style="margin-top:30px; width: 100%" onclick="toggleModal(false)">BACK TO FOCUS</button>
+            <button class="btn" style="margin-top:30px; width: 100%" onclick="toggleModal(false)">RETURN</button>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        const PIN = "8472";
+        // REPLACE THIS WITH YOUR GOOGLE WEB APP URL
         const GOOGLE_SHEET_URL = "PASTE_YOUR_URL_HERE"; 
         
+        const PIN = "8472";
         const pinInput = document.getElementById('pin-input');
-        const pinScreen = document.getElementById('lock-screen');
-        const mainUI = document.getElementById('main-ui');
+        let habits = JSON.parse(localStorage.getItem('habits-v2')) || [];
+        let history = JSON.parse(localStorage.getItem('habit-history')) || {};
 
-        // Initial Data: Empty array so you can add your own
-        let habits = JSON.parse(localStorage.getItem('habits-v3')) || [];
-        let history = JSON.parse(localStorage.getItem('habit-history-v3')) || {};
-
-        // PIN Logic
-        pinInput.focus();
         pinInput.addEventListener('input', () => {
             if(pinInput.value === PIN) {
-                pinScreen.style.display = 'none';
-                mainUI.style.display = 'flex';
-                init();
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('main-ui').style.display = 'flex';
+                render();
             }
         });
 
-        function init() {
-            checkDayReset();
-            renderHabits();
-        }
-
-        function renderHabits() {
+        function render() {
             const grid = document.getElementById('habit-grid');
             grid.innerHTML = '';
-            
             const now = new Date();
             document.getElementById('date-header').innerText = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
             document.getElementById('day-header').innerText = now.toLocaleDateString(undefined, { weekday: 'long' });
-
-            if (habits.length === 0) {
-                grid.innerHTML = `<p style="grid-column: 1/-1; color: var(--text-dim); font-style: italic;">No habits defined. Click '+ NEW HABIT' to begin.</p>`;
-            }
 
             habits.forEach(h => {
                 const card = document.createElement('div');
                 card.className = `card ${h.done ? 'done' : ''}`;
                 card.tabIndex = 0;
-                card.innerHTML = `
-                    <div class="habit-info"><h3>${h.name}</h3></div>
-                    <div class="check">${h.done ? '✦' : '✧'}</div>
-                `;
+                card.innerHTML = `<h3>${h.name}</h3><div class="check">${h.done ? '✦' : '✧'}</div>`;
                 card.onclick = () => toggleHabit(h);
                 card.onkeydown = (e) => { if(e.key === 'Enter') toggleHabit(h); };
                 grid.appendChild(card);
@@ -240,6 +100,7 @@
             h.done = !h.done;
             save();
             
+            // SYNC TO GOOGLE SHEETS
             if (GOOGLE_SHEET_URL !== "PASTE_YOUR_URL_HERE") {
                 fetch(GOOGLE_SHEET_URL, {
                     method: 'POST',
@@ -254,89 +115,34 @@
         }
 
         function save() {
-            localStorage.setItem('habits-v3', JSON.stringify(habits));
-            updateHistory();
-            renderHabits();
+            localStorage.setItem('habits-v2', JSON.stringify(habits));
+            render();
         }
 
-        function updateHistory() {
-            const today = new Date().toISOString().split('T')[0];
-            const completedCount = habits.filter(h => h.done).length;
-            const percent = habits.length > 0 ? completedCount / habits.length : 0;
-            history[today] = percent;
-            localStorage.setItem('habit-history-v3', JSON.stringify(history));
+        function addHabit() {
+            const n = prompt("Habit Name:");
+            if(n) { habits.push({ id: Date.now(), name: n, done: false }); save(); }
         }
 
         function toggleModal(show) {
-            const m = document.getElementById('modal');
-            m.style.display = show ? 'flex' : 'none';
+            document.getElementById('modal').style.display = show ? 'flex' : 'none';
             if(show) renderCalendar();
         }
 
         function renderCalendar() {
             const cal = document.getElementById('calendar');
-            const title = document.getElementById('month-title');
             cal.innerHTML = '';
-            
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            
-            // Update Title with Month and Year
-            const monthName = now.toLocaleString('default', { month: 'long' });
-            title.innerText = `${monthName} ${year}`;
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            for(let i=0; i<firstDay; i++) cal.appendChild(document.createElement('div'));
-
+            const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
             for(let d=1; d<=daysInMonth; d++) {
-                const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const score = history[dateStr] || 0;
-                
                 const cell = document.createElement('div');
                 cell.className = 'day-cell';
                 cell.innerText = d;
-                
-                if(score > 0) {
-                    cell.style.background = `rgba(0, 255, 136, ${score})`;
-                    if(score === 1) cell.classList.add('perfect');
-                }
                 cal.appendChild(cell);
             }
         }
 
-        function checkDayReset() {
-            const lastDate = localStorage.getItem('last-opened-date');
-            const today = new Date().toISOString().split('T')[0];
-            if(lastDate && lastDate !== today) {
-                habits.forEach(h => h.done = false); 
-                save();
-            }
-            localStorage.setItem('last-opened-date', today);
-        }
-
-        function addHabit() {
-            const n = prompt("Define new habit:");
-            if(n) { habits.push({ id: Date.now(), name: n, done: false }); save(); }
-        }
-
-        function resetDay() {
-            if(confirm("Reset all progress for today?")) {
-                habits.forEach(h => h.done = false);
-                save();
-            }
-        }
-
-        // Remote Navigation
-        window.addEventListener('keydown', (e) => {
-            const focusable = document.querySelectorAll('.card, .btn');
-            let i = Array.from(focusable).indexOf(document.activeElement);
-            if(e.key === 'ArrowRight' || e.key === 'ArrowDown') i = (i+1)%focusable.length;
-            if(e.key === 'ArrowLeft' || e.key === 'ArrowUp') i = (i-1+focusable.length)%focusable.length;
-            if(focusable[i]) focusable[i].focus();
-        });
+        // Focus PIN on load
+        window.onload = () => pinInput.focus();
     </script>
 </body>
 </html>
