@@ -17,13 +17,14 @@
             min-height: 100vh; overflow-x: hidden;
         }
 
-        /* --- PULSE BAR (URGENCY) --- */
+        /* --- PULSE BAR (QUOTES) --- */
         #pulse-bar {
             width: 100%; background: #000; padding: 12px 0;
             border-bottom: 1px solid #222; display: flex;
-            justify-content: center; /* Centered now that there is only one item */
+            justify-content: center;
             font-size: 0.8rem;
             text-transform: uppercase; letter-spacing: 2px; color: var(--accent);
+            text-align: center;
         }
 
         /* --- LOCK SCREEN --- */
@@ -99,7 +100,7 @@
 <body>
 
     <div id="pulse-bar">
-        <span id="countdown-timer">Goal Loading...</span>
+        <span id="daily-quote"></span>
     </div>
 
     <div id="lock-screen">
@@ -116,7 +117,7 @@
                 </div>
                 <button class="nav-arrow" onclick="changeDate(1)">&#9654;</button>
             </div>
-            </div>
+        </div>
 
         <div class="grid" id="habit-grid"></div>
 
@@ -139,7 +140,12 @@
 
     <script>
         const PIN = "8472";
-        const GOAL_DATE = new Date("2026-06-15"); 
+        
+        // YOUR QUOTES HERE
+        const QUOTES = [
+            "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
+            "The pain of discipline or the pain of regret"
+        ];
         
         let habits = JSON.parse(localStorage.getItem('h-v5')) || [];
         let history = JSON.parse(localStorage.getItem('hist-v5')) || {};
@@ -154,9 +160,22 @@
         });
 
         function init() {
-            updateUrgency();
+            updateQuote();
             checkDayReset();
             render();
+        }
+
+        function updateQuote() {
+            // Calculate Day of Year to cycle quotes
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+            const oneDay = 1000 * 60 * 60 * 24;
+            const dayOfYear = Math.floor(diff / oneDay);
+            
+            // Pick quote based on day
+            const quoteIndex = dayOfYear % QUOTES.length;
+            document.getElementById('daily-quote').innerText = QUOTES[quoteIndex].toUpperCase();
         }
 
         function getViewDate() {
@@ -172,14 +191,6 @@
         function changeDate(dir) {
             viewOffset += dir;
             render();
-        }
-
-        function updateUrgency() {
-            const now = new Date();
-            const diff = GOAL_DATE - now;
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            document.getElementById('countdown-timer').innerText = `T-MINUS ${days} DAYS UNTIL MISSION`;
-            // Removed Year Progress calculation
         }
 
         function render() {
@@ -232,7 +243,6 @@
                 
                 grid.appendChild(card);
             });
-            // Removed updateStats() call
         }
 
         function toggleHabit(index, name, dateStr) {
@@ -275,8 +285,6 @@
             localStorage.setItem('hist-v5', JSON.stringify(history));
         }
 
-        // Removed updateStats() and renderGraph() functions
-
         function toggleModal(s) {
             document.getElementById('modal').style.display = s ? 'flex' : 'none';
             if(s) renderCalendar();
@@ -314,21 +322,4 @@
             }
         }
         function resetDay() { 
-            if(confirm("This will uncheck all boxes for today. Continue?")) { 
-                habits.forEach(h=>h.done=false); 
-                save(); 
-                render();
-            } 
-        }
-
-        // TV Nav
-        window.addEventListener('keydown', (e) => {
-            const f = document.querySelectorAll('.card, .btn, .day-cell, .nav-arrow');
-            let i = Array.from(f).indexOf(document.activeElement);
-            if(e.key==='ArrowRight'||e.key==='ArrowDown') i=(i+1)%f.length;
-            if(e.key==='ArrowLeft'||e.key==='ArrowUp') i=(i-1+f.length)%f.length;
-            if(f[i]) f[i].focus();
-        });
-    </script>
-</body>
-</html>
+            if(
