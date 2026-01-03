@@ -7,7 +7,7 @@
     <style>
         :root {
             --bg: #050505; --surface: #111; --accent: #00f2ff;
-            --success: #00ff88; --text: #fff; --text-dim: #666;
+            --success: #00ff88; --text: #fff; --text-dim: #666; --danger: #ff4444;
         }
 
         body {
@@ -38,34 +38,17 @@
         /* --- MAIN UI --- */
         #main-ui { display: none; width: 95%; max-width: 1200px; padding: 30px; flex-direction: column; }
         
-        /* HEADER UPDATES FOR ARROWS */
         .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; }
         
-        .date-nav {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
+        /* DATE NAV */
+        .date-nav { display: flex; align-items: center; gap: 20px; }
         .nav-arrow {
-            background: transparent;
-            border: 1px solid #333;
-            color: var(--accent);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 10px 15px;
-            border-radius: 8px;
-            transition: 0.2s;
-            user-select: none;
+            background: transparent; border: 1px solid #333; color: var(--accent);
+            font-size: 1.5rem; cursor: pointer; padding: 10px 15px; border-radius: 8px;
+            transition: 0.2s; user-select: none;
         }
-        .nav-arrow:hover {
-            background: var(--accent);
-            color: #000;
-        }
-
-        .date-wrapper {
-            text-align: center;
-        }
+        .nav-arrow:hover { background: var(--accent); color: #000; }
+        .date-wrapper { text-align: center; }
 
         #date-header { font-size: 4rem; font-weight: 900; margin: 0; letter-spacing: -3px; line-height: 1; }
         #day-header { color: var(--accent); margin:0; letter-spacing:3px; font-size: 1.2rem; }
@@ -76,13 +59,21 @@
 
         /* --- HABITS --- */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        
         .card {
-            background: var(--surface); padding: 25px; border-radius: 15px; border: 1px solid #222;
+            background: var(--surface); padding: 20px 25px; border-radius: 15px; border: 1px solid #222;
             cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: space-between;
         }
         .card:focus, .card:hover { border-color: var(--accent); outline: none; background: #1a1a1a; transform: translateY(-3px); }
         .card.done { border-color: var(--success); }
         .card.done .check { color: var(--success); text-shadow: 0 0 10px var(--success); }
+
+        /* Delete Button Styles */
+        .delete-btn {
+            background: transparent; border: none; color: #333; font-size: 1.5rem;
+            cursor: pointer; padding: 0 0 0 15px; line-height: 1; transition: 0.2s;
+        }
+        .delete-btn:hover { color: var(--danger); transform: scale(1.1); }
 
         /* --- GRAPH AREA --- */
         #performance-section { margin-top: 40px; background: var(--surface); padding: 20px; border-radius: 15px; border: 1px solid #222; }
@@ -150,7 +141,7 @@
         <div style="display:flex; gap:10px;">
             <button class="btn" onclick="toggleModal(true)">ANALYSIS</button>
             <button class="btn" onclick="addHabit()">+ HABIT</button>
-            <button class="btn" onclick="resetDay()">RESET</button>
+            <button class="btn" onclick="resetDay()">RESET PROGRESS</button>
         </div>
     </div>
 
@@ -166,11 +157,11 @@
 
     <script>
         const PIN = "8472";
-        const GOAL_DATE = new Date("2026-06-15"); // Change this to your LSAT date
+        const GOAL_DATE = new Date("2026-06-15"); 
         
         let habits = JSON.parse(localStorage.getItem('h-v5')) || [];
         let history = JSON.parse(localStorage.getItem('hist-v5')) || {};
-        let viewOffset = 0; // 0 = Today, -1 = Yesterday, etc.
+        let viewOffset = 0; 
 
         document.getElementById('pin-input').addEventListener('input', (e) => {
             if(e.target.value === PIN) {
@@ -187,7 +178,6 @@
             renderGraph();
         }
 
-        // Helper to get the date currently being viewed
         function getViewDate() {
             const d = new Date();
             d.setDate(d.getDate() + viewOffset);
@@ -220,24 +210,18 @@
             grid.innerHTML = '';
             
             const viewDate = getViewDate();
-            const today = new Date();
-            
-            // Render Headers
-            document.getElementById('date-header').innerText = viewDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-            document.getElementById('day-header').innerText = viewDate.toLocaleDateString(undefined, { weekday: 'long' }) + (viewOffset === 0 ? " (Today)" : "");
-
-            // Logic to determine checked state
             const viewDateStr = getDateString(viewDate);
             const isToday = viewOffset === 0;
+
+            document.getElementById('date-header').innerText = viewDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            document.getElementById('day-header').innerText = viewDate.toLocaleDateString(undefined, { weekday: 'long' }) + (viewOffset === 0 ? " (Today)" : "");
 
             habits.forEach((h, index) => {
                 let isDone = false;
                 
                 if (isToday) {
-                    // If viewing today, use the live object
                     isDone = h.done;
                 } else {
-                    // If viewing past/future, check history
                     const record = history[viewDateStr];
                     if (record && record.items.includes(h.name)) {
                         isDone = true;
@@ -247,15 +231,30 @@
                 const card = document.createElement('div');
                 card.className = `card ${isDone ? 'done' : ''}`;
                 card.tabIndex = 0;
-                card.innerHTML = `<div>${h.name}</div><div class="check">${isDone ? '✦' : '✧'}</div>`;
                 
-                // New click handler that handles both today and history updating
-                card.onclick = () => toggleHabit(index, h.name, viewDateStr);
-                
-                // Keyboard nav
-                card.onkeydown = (e) => { 
-                    if(e.key === 'Enter') toggleHabit(index, h.name, viewDateStr); 
+                // Content Structure: Name | Check | Delete
+                card.innerHTML = `
+                    <div style="flex-grow:1">${h.name}</div>
+                    <div style="display:flex; align-items:center;">
+                        <div class="check">${isDone ? '✦' : '✧'}</div>
+                    </div>
+                `;
+
+                // Add delete button programmatically to handle events safely
+                const delBtn = document.createElement('button');
+                delBtn.innerHTML = '&times;';
+                delBtn.className = 'delete-btn';
+                delBtn.title = "Delete Habit";
+                delBtn.onclick = (e) => {
+                    e.stopPropagation(); // Prevents clicking the card background
+                    deleteHabit(index);
                 };
+
+                // Append delete button to the right side flex container
+                card.querySelector('div:last-child').appendChild(delBtn);
+
+                card.onclick = () => toggleHabit(index, h.name, viewDateStr);
+                card.onkeydown = (e) => { if(e.key === 'Enter') toggleHabit(index, h.name, viewDateStr); };
                 
                 grid.appendChild(card);
             });
@@ -265,42 +264,36 @@
         function toggleHabit(index, name, dateStr) {
             const isToday = (dateStr === getDateString(new Date()));
 
-            // 1. Update Today's Live State (if applicable)
             if (isToday) {
                 habits[index].done = !habits[index].done;
                 localStorage.setItem('h-v5', JSON.stringify(habits));
             }
 
-            // 2. Update History for that specific date
-            if (!history[dateStr]) {
-                history[dateStr] = { score: 0, items: [] };
-            }
-
+            if (!history[dateStr]) history[dateStr] = { score: 0, items: [] };
+            
             const histItems = history[dateStr].items;
             const itemIndex = histItems.indexOf(name);
 
-            if (itemIndex > -1) {
-                // If exists, remove it (uncheck)
-                histItems.splice(itemIndex, 1);
-            } else {
-                // If not exists, add it (check)
-                histItems.push(name);
-            }
+            if (itemIndex > -1) histItems.splice(itemIndex, 1);
+            else histItems.push(name);
 
-            // Recalculate score for that day
             history[dateStr].score = habits.length ? histItems.length / habits.length : 0;
-            
             localStorage.setItem('hist-v5', JSON.stringify(history));
 
-            // Re-render to show changes
             render();
             renderGraph();
         }
 
-        // Cleaned up original save function (mostly replaced by toggleHabit logic now)
+        function deleteHabit(index) {
+            if(confirm("Are you sure you want to permanently delete this habit?")) {
+                habits.splice(index, 1); // Remove from array
+                save();
+                render();
+            }
+        }
+
         function save() {
             localStorage.setItem('h-v5', JSON.stringify(habits));
-            // Force save today's history
             const todayStr = getDateString(new Date());
             history[todayStr] = { 
                 score: habits.length ? habits.filter(x=>x.done).length / habits.length : 0,
@@ -312,8 +305,6 @@
         function updateStats() {
             let streak = 0;
             const dates = Object.keys(history).sort().reverse();
-            // Simple streak calc based on consecutive days with 100% score
-            // Note: This calculates based on saved history, not necessarily checking gaps
             for(let d of dates) {
                 if(history[d].score === 1) streak++;
                 else break;
@@ -324,7 +315,6 @@
         function renderGraph() {
             const container = document.getElementById('trend-graph');
             container.innerHTML = '';
-            // Show last 7 days relative to Today (not relative to view)
             for(let i=6; i>=0; i--) {
                 const d = new Date(); d.setDate(d.getDate() - i);
                 const ds = getDateString(d);
@@ -374,7 +364,7 @@
             }
         }
         function resetDay() { 
-            if(confirm("Reset Today?")) { 
+            if(confirm("This will uncheck all boxes for today. Continue?")) { 
                 habits.forEach(h=>h.done=false); 
                 save(); 
                 render();
