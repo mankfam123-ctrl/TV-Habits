@@ -328,6 +328,43 @@
         let calendarOffset = 0; 
         let selectedHistoryDate = null; 
 
+        // --- SOUND EFFECT (HERO FANFARE) ---
+        function playSuccessSound() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+
+            const now = ctx.currentTime;
+            
+            // Notes for a triumphant Major Arpeggio (G -> C -> E -> High C)
+            const notes = [
+                { freq: 392.00, start: 0.0, dur: 0.1 }, // G4
+                { freq: 523.25, start: 0.1, dur: 0.1 }, // C5
+                { freq: 659.25, start: 0.2, dur: 0.1 }, // E5
+                { freq: 1046.50, start: 0.3, dur: 0.4 } // C6 (Long finish)
+            ];
+
+            notes.forEach(n => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                // Triangle wave sounds like 8-bit NES/Gameboy (Hero style)
+                osc.type = 'triangle'; 
+                osc.frequency.value = n.freq;
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start(now + n.start);
+                
+                // Volume envelope to prevent clicking
+                gain.gain.setValueAtTime(0.1, now + n.start);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+                
+                osc.stop(now + n.start + n.dur);
+            });
+        }
+
         // --- THEME LOGIC ---
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
@@ -355,7 +392,6 @@
             }
         });
 
-        // Auto-save notes on input
         document.getElementById('day-note').addEventListener('input', (e) => {
             if (selectedHistoryDate) {
                 if (!history[selectedHistoryDate]) {
@@ -452,6 +488,12 @@
 
             if (isToday) {
                 habits[index].done = !habits[index].done;
+                
+                // PLAY SOUND IF DONE
+                if(habits[index].done) {
+                    playSuccessSound();
+                }
+
                 localStorage.setItem('h-v5', JSON.stringify(habits));
             }
 
@@ -482,7 +524,6 @@
             localStorage.setItem('h-v5', JSON.stringify(habits));
             const todayStr = getDateString(new Date());
             
-            // Preserve existing note if updating today
             const existingNote = history[todayStr] ? history[todayStr].note : "";
             
             history[todayStr] = { 
@@ -620,7 +661,6 @@
 
         window.addEventListener('keydown', (e) => {
             const f = document.querySelectorAll('.card, .btn, .day-cell, .nav-arrow, #settings-btn');
-            // Prevent capturing textarea typing
             if (document.activeElement.tagName === 'TEXTAREA') return;
             
             let i = Array.from(f).indexOf(document.activeElement);
