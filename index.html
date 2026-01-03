@@ -6,285 +6,262 @@
     <title>Mastery Command Center</title>
     <style>
         :root {
-            --bg: #050505;
-            --surface: #121212;
-            --accent: #00f2ff;
-            --success: #00ff88;
-            --text: #ffffff;
-            --text-dim: #888;
-            --focus: #ffffff;
+            --bg: #050505; --surface: #111; --accent: #00f2ff;
+            --success: #00ff88; --danger: #ff4444; --text: #fff; --text-dim: #666;
         }
 
         body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', system-ui, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
+            background: var(--bg); color: var(--text);
+            font-family: 'Inter', system-ui, sans-serif; margin: 0;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; overflow-x: hidden;
         }
 
-        /* --- VISION BAR --- */
+        /* --- MOTIVATION BAR --- */
         #vision-bar {
-            width: 100%;
-            background: linear-gradient(90deg, #000, #1a1a1a, #000);
-            padding: 10px 0;
-            text-align: center;
-            border-bottom: 1px solid #333;
-            font-size: 0.9rem;
-            letter-spacing: 4px;
-            color: var(--accent);
-            font-weight: bold;
-            text-transform: uppercase;
+            width: 100%; background: #000; padding: 15px 0;
+            border-bottom: 1px solid #222; text-align: center;
+            font-size: 0.85rem; letter-spacing: 2px; color: var(--accent);
+            font-weight: bold; text-transform: uppercase;
         }
 
         /* --- LOCK SCREEN --- */
         #lock-screen {
             position: fixed; inset: 0; background: var(--bg);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000;
+            display: flex; justify-content: center; align-items: center; z-index: 10000;
         }
         #pin-input {
             background: #000; border: 2px solid var(--accent); color: var(--accent);
-            font-size: 3rem; width: 200px; text-align: center; border-radius: 15px; margin: 20px 0; letter-spacing: 10px;
+            font-size: 3rem; width: 180px; text-align: center; border-radius: 12px;
         }
 
         /* --- MAIN UI --- */
-        #main-ui { display: none; width: 100%; max-width: 1200px; padding: 40px 20px; flex-direction: column; align-items: center; }
-        header { text-align: center; margin-bottom: 40px; }
-        #date-header { font-size: 4rem; font-weight: 800; margin: 0; letter-spacing: -2px; }
-        #day-header { color: var(--accent); text-transform: uppercase; letter-spacing: 5px; margin-bottom: 5px; }
-
-        /* --- HABIT CARDS --- */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; width: 100%; }
-        .card {
-            background: var(--surface); padding: 30px; border-radius: 20px; border: 2px solid transparent;
-            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: space-between;
+        #main-ui { display: none; width: 95%; max-width: 1200px; padding: 30px; flex-direction: column; }
+        
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        
+        /* DATE NAV */
+        .date-nav { display: flex; align-items: center; gap: 20px; }
+        .nav-arrow { 
+            background: var(--surface); border: 1px solid #333; color: white; 
+            font-size: 1.5rem; padding: 10px 20px; border-radius: 10px; cursor: pointer;
         }
-        .card:focus, .card:hover { border-color: var(--focus); background: #1a1a1a; outline: none; transform: translateY(-5px); }
-        .card.done { border-color: var(--success); background: rgba(0, 255, 136, 0.05); }
-        .card.done .check { color: var(--success); }
-        .check { font-size: 2rem; color: #222; }
+        .nav-arrow:focus { background: var(--accent); color: black; outline: none; }
+        
+        #date-header { font-size: 3.5rem; font-weight: 900; margin: 0; letter-spacing: -2px; }
 
-        /* --- MONTHLY MODAL --- */
+        /* --- HABITS --- */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
+        .card {
+            background: var(--surface); padding: 25px; border-radius: 15px; border: 1px solid #222;
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: space-between;
+        }
+        .card:focus, .card:hover { border-color: var(--accent); outline: none; background: #1a1a1a; }
+        .card.done { border-color: var(--success); }
+
+        .delete-btn { 
+            background: none; border: none; color: #444; font-size: 1.2rem; 
+            cursor: pointer; padding: 5px 10px; border-radius: 5px;
+        }
+        .delete-btn:focus { background: var(--danger); color: white; outline: none; }
+
+        .btn-group { margin-top: 40px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn {
+            background: #222; color: #fff; padding: 15px 30px; border-radius: 10px;
+            border: 1px solid #333; cursor: pointer; font-weight: bold;
+        }
+        .btn:focus { background: var(--accent); color: #000; outline: none; }
+
         #modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            display: none; justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(15px);
+            display: none; justify-content: center; align-items: center; z-index: 5000;
         }
-        .modal-content {
-            background: var(--surface); width: 90%; max-width: 900px; padding: 40px; border-radius: 30px; border: 1px solid #333;
-            display: flex; gap: 30px;
-        }
-        .calendar-section { flex: 2; }
-        .details-section { 
-            flex: 1; background: #0a0a0a; border-radius: 20px; padding: 20px; 
-            border: 1px solid #222; display: flex; flex-direction: column;
-        }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .day-cell {
-            aspect-ratio: 1; background: #1a1a1a; border-radius: 8px; border: 2px solid transparent;
-            display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: var(--text-dim); cursor: pointer;
-        }
-        .day-cell:hover, .day-cell:focus { border-color: var(--accent); color: white; outline: none; }
-        .day-cell.perfect { background: var(--success) !important; color: black !important; font-weight: bold; }
-        
-        #detail-list { list-style: none; padding: 0; margin-top: 15px; }
-        #detail-list li { margin-bottom: 10px; padding-left: 20px; position: relative; font-size: 0.9rem; }
-        #detail-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent); }
-
-        .nav-bar { margin-top: 40px; display: flex; gap: 15px; }
-        .btn {
-            background: var(--surface); color: white; padding: 15px 30px; border-radius: 12px;
-            border: 1px solid #333; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
-        .btn:focus, .btn:hover { background: var(--accent); color: black; outline: none; }
+        .modal-content { background: var(--surface); width: 90%; max-width: 800px; padding: 40px; border-radius: 20px; border: 1px solid #333; }
     </style>
 </head>
 <body>
 
-    <div id="vision-bar">Mastery Commences Now • LSAT Goal: 170+ • Discipline Equals Freedom</div>
+    <div id="vision-bar">Loading Motivation...</div>
 
     <div id="lock-screen">
-        <div id="pin-box">
-            <h1>SYSTEM ACCESS</h1>
-            <input type="password" id="pin-input" maxlength="4" placeholder="••••" inputmode="numeric">
-        </div>
+        <input type="password" id="pin-input" maxlength="4" placeholder="PIN" autofocus>
     </div>
 
     <div id="main-ui">
-        <header>
-            <p id="day-header"></p>
-            <h1 id="date-header"></h1>
-        </header>
+        <div class="header-flex">
+            <div class="date-nav">
+                <button class="nav-arrow" onclick="changeDate(-1)">←</button>
+                <div>
+                    <p id="day-header" style="color: var(--accent); margin:0; letter-spacing:3px; text-transform:uppercase;"></p>
+                    <h1 id="date-header"></h1>
+                </div>
+                <button class="nav-arrow" onclick="changeDate(1)">→</button>
+            </div>
+            <div style="text-align: right;">
+                <div id="streak-val" style="font-size: 2rem; font-weight: bold; color: var(--success);">0</div>
+                <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">Perfect Days</div>
+            </div>
+        </div>
+
         <div class="grid" id="habit-grid"></div>
-        <div class="nav-bar">
-            <button class="btn" onclick="toggleModal(true)">MONTHLY OVERVIEW</button>
+
+        <div class="btn-group">
+            <button class="btn" onclick="toggleModal(true)">ANALYSIS</button>
             <button class="btn" onclick="addHabit()">+ NEW HABIT</button>
-            <button class="btn" onclick="resetDay()" style="color:red">RESET</button>
+            <button class="btn" onclick="resetDayProgress()" style="color: var(--danger)">RESET PROGRESS</button>
+            <button class="btn" onclick="clearAllHabits()" style="border-color: var(--danger)">DELETE ALL HABITS</button>
         </div>
     </div>
 
     <div id="modal" onclick="toggleModal(false)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="calendar-section">
-                <h2 id="month-year-label" style="color: var(--accent); margin-top:0"></h2>
-                <div class="calendar-grid" id="calendar"></div>
-            </div>
-            <div class="details-section">
-                <h3 id="detail-date" style="margin-top:0; color: var(--accent);">Day Details</h3>
-                <p id="detail-msg" style="font-size: 0.8rem; color: #666;">Hover or select a day to see what you achieved.</p>
-                <ul id="detail-list"></ul>
-            </div>
+            <h2>Monthly Overview</h2>
+            <div id="calendar-view" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;"></div>
+            <button class="btn" style="width:100%; margin-top:20px;" onclick="toggleModal(false)">CLOSE</button>
         </div>
     </div>
 
     <script>
         const PIN = "8472";
-        const GOOGLE_URL = "PASTE_YOUR_URL_HERE";
-        
-        // Data Structure: v4 includes 'logs' to track specific names of completed habits
-        let habits = JSON.parse(localStorage.getItem('habits-v4')) || [];
-        let history = JSON.parse(localStorage.getItem('habit-history-v4')) || {};
+        const quotes = [
+            "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
+            "The pain of discipline or the pain of regret.",
+            "He who has a why to live can bear almost any how.",
+            "Discipline is choosing between what you want now and what you want most."
+        ];
 
-        const pinInput = document.getElementById('pin-input');
-        pinInput.focus();
-        pinInput.addEventListener('input', () => {
-            if(pinInput.value === PIN) {
-                document.getElementById('lock-screen').style.display = 'none';
-                document.getElementById('main-ui').style.display = 'flex';
+        let viewingDate = new Date();
+        let habitsTemplate = JSON.parse(localStorage.getItem('h-template')) || [];
+        let history = JSON.parse(localStorage.getItem('h-history-v6')) || {};
+
+        document.getElementById('pin-input').addEventListener('input', (e) => {
+            if(e.target.value === PIN) {
+                document.getElementById('lock-screen').style.display='none';
+                document.getElementById('main-ui').style.display='flex';
                 init();
             }
         });
 
         function init() {
-            checkDayReset();
+            setQuote();
             render();
+            // Auto-check for midnight every minute
+            setInterval(() => {
+                if (new Date().getHours() === 0 && new Date().getMinutes() === 0) {
+                    location.reload(); 
+                }
+            }, 60000);
+        }
+
+        function setQuote() {
+            const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+            document.getElementById('vision-bar').innerText = quotes[dayOfYear % quotes.length];
         }
 
         function render() {
+            const dateStr = viewingDate.toISOString().split('T')[0];
+            const dayData = history[dateStr] || { completed: [] };
+            
+            // Header
+            document.getElementById('date-header').innerText = viewingDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            document.getElementById('day-header').innerText = viewingDate.toLocaleDateString(undefined, { weekday: 'long' });
+
             const grid = document.getElementById('habit-grid');
             grid.innerHTML = '';
-            const now = new Date();
-            document.getElementById('date-header').innerText = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-            document.getElementById('day-header').innerText = now.toLocaleDateString(undefined, { weekday: 'long' });
 
-            habits.forEach(h => {
+            habitsTemplate.forEach((h, index) => {
+                const isDone = dayData.completed.includes(h.id);
                 const card = document.createElement('div');
-                card.className = `card ${h.done ? 'done' : ''}`;
+                card.className = `card ${isDone ? 'done' : ''}`;
                 card.tabIndex = 0;
-                card.innerHTML = `<h3>${h.name}</h3><div class="check">${h.done ? '✦' : '✧'}</div>`;
-                card.onclick = () => toggleHabit(h);
-                card.onkeydown = (e) => { if(e.key === 'Enter') toggleHabit(h); };
+                card.innerHTML = `
+                    <div onclick="toggleHabit('${h.id}')" style="flex:1; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size: 1.3rem; font-weight: 500;">${h.name}</span>
+                        <span style="font-size: 1.5rem;">${isDone ? '✦' : '✧'}</span>
+                    </div>
+                    <button class="delete-btn" onclick="deleteHabit('${h.id}')">✕</button>
+                `;
                 grid.appendChild(card);
             });
+            updateStats();
         }
 
-        function toggleHabit(h) {
-            h.done = !h.done;
+        function toggleHabit(id) {
+            const dateStr = viewingDate.toISOString().split('T')[0];
+            if (!history[dateStr]) history[dateStr] = { completed: [] };
+            
+            const index = history[dateStr].completed.indexOf(id);
+            if (index > -1) history[dateStr].completed.splice(index, 1);
+            else history[dateStr].completed.push(id);
+            
             save();
-            syncToCloud(h);
         }
 
-        function save() {
-            localStorage.setItem('habits-v4', JSON.stringify(habits));
-            
-            // Record today's data snapshot
-            const today = new Date().toISOString().split('T')[0];
-            const completedNames = habits.filter(x => x.done).map(x => x.name);
-            const score = habits.length ? completedNames.length / habits.length : 0;
-            
-            history[today] = { score: score, completed: completedNames };
-            localStorage.setItem('habit-history-v4', JSON.stringify(history));
+        function changeDate(offset) {
+            viewingDate.setDate(viewingDate.getDate() + offset);
             render();
         }
 
-        function renderCalendar() {
-            const cal = document.getElementById('calendar');
-            cal.innerHTML = '';
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            document.getElementById('month-year-label').innerText = now.toLocaleString('default', { month: 'long', year: 'numeric' });
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            for(let i=0; i<firstDay; i++) cal.appendChild(document.createElement('div'));
-
-            for(let d=1; d<=daysInMonth; d++) {
-                const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const dayData = history[dateStr];
-                
-                const cell = document.createElement('div');
-                cell.className = 'day-cell';
-                cell.innerText = d;
-                cell.tabIndex = 0;
-                
-                if(dayData && dayData.score > 0) {
-                    cell.style.background = `rgba(0, 255, 136, ${dayData.score})`;
-                    if(dayData.score === 1) cell.classList.add('perfect');
-                }
-
-                const showDetails = () => {
-                    document.getElementById('detail-date').innerText = `Day ${d} Log`;
-                    const list = document.getElementById('detail-list');
-                    list.innerHTML = '';
-                    if(dayData && dayData.completed.length > 0) {
-                        dayData.completed.forEach(name => {
-                            const li = document.createElement('li');
-                            li.innerText = name;
-                            list.appendChild(li);
-                        });
-                        document.getElementById('detail-msg').style.display = 'none';
-                    } else {
-                        document.getElementById('detail-msg').innerText = "No activity recorded.";
-                        document.getElementById('detail-msg').style.display = 'block';
-                    }
-                };
-
-                cell.onmouseover = showDetails;
-                cell.onfocus = showDetails;
-                cal.appendChild(cell);
-            }
-        }
-
-        function toggleModal(show) {
-            document.getElementById('modal').style.display = show ? 'flex' : 'none';
-            if(show) renderCalendar();
-        }
-
         function addHabit() {
-            const n = prompt("New Habit:");
-            if(n) { habits.push({ id: Date.now(), name: n, done: false }); save(); }
-        }
-
-        function checkDayReset() {
-            const today = new Date().toISOString().split('T')[0];
-            if(localStorage.getItem('last-date') !== today) {
-                habits.forEach(h => h.done = false);
-                localStorage.setItem('last-date', today);
+            const n = prompt("Define New Habit:");
+            if(n) {
+                const id = 'h-' + Date.now();
+                habitsTemplate.push({ id, name: n });
                 save();
             }
         }
 
-        function resetDay() { if(confirm("Reset?")) { habits.forEach(h=>h.done=false); save(); } }
-
-        function syncToCloud(h) {
-            if(GOOGLE_URL === "PASTE_YOUR_URL_HERE") return;
-            fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({
-                date: new Date().toLocaleDateString(), habitName: h.name, status: h.done ? "Done" : "Undo"
-            })});
+        function deleteHabit(id) {
+            if(confirm("Remove this habit from your daily list?")) {
+                habitsTemplate = habitsTemplate.filter(h => h.id !== id);
+                save();
+            }
         }
 
-        // TV Navigation
+        function resetDayProgress() {
+            const dateStr = viewingDate.toISOString().split('T')[0];
+            if(history[dateStr]) {
+                history[dateStr].completed = [];
+                save();
+            }
+        }
+
+        function clearAllHabits() {
+            if(confirm("Erase all habits and start a new list?")) {
+                habitsTemplate = [];
+                save();
+            }
+        }
+
+        function save() {
+            localStorage.setItem('h-template', JSON.stringify(habitsTemplate));
+            localStorage.setItem('h-history-v6', JSON.stringify(history));
+            render();
+        }
+
+        function updateStats() {
+            let streak = 0;
+            const dates = Object.keys(history).sort().reverse();
+            for(let d of dates) {
+                const day = history[d];
+                if(habitsTemplate.length > 0 && day.completed.length === habitsTemplate.length) streak++;
+                else if (d === new Date().toISOString().split('T')[0]) continue; 
+                else break;
+            }
+            document.getElementById('streak-val').innerText = streak;
+        }
+
+        function toggleModal(s) {
+            document.getElementById('modal').style.display = s ? 'flex' : 'none';
+        }
+
+        // TV Remote Navigation
         window.addEventListener('keydown', (e) => {
-            const focusable = document.querySelectorAll('.card, .btn, .day-cell');
-            let i = Array.from(focusable).indexOf(document.activeElement);
-            if(e.key === 'ArrowRight' || e.key === 'ArrowDown') i = (i+1)%focusable.length;
-            if(e.key === 'ArrowLeft' || e.key === 'ArrowUp') i = (i-1+focusable.length)%focusable.length;
-            if(focusable[i]) focusable[i].focus();
+            const f = document.querySelectorAll('.card, .btn, .nav-arrow, .delete-btn');
+            let i = Array.from(f).indexOf(document.activeElement);
+            if(e.key==='ArrowRight'||e.key==='ArrowDown') i=(i+1)%f.length;
+            if(e.key==='ArrowLeft'||e.key==='ArrowUp') i=(i-1+f.length)%f.length;
+            if(f[i]) f[i].focus();
         });
     </script>
 </body>
