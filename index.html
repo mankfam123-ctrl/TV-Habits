@@ -194,7 +194,6 @@
             background: var(--selected-bg); transform: scale(1.05); z-index: 4; color: var(--text); font-weight: bold;
         }
         
-        /* NOTE INDICATOR DOT */
         .day-cell.has-note::after {
             content: '';
             position: absolute;
@@ -496,10 +495,12 @@
 
         function toggleHabit(index, name, dateStr) {
             const isToday = (dateStr === getDateString(new Date()));
+            
+            // Logic: Sound should only play when ADDING to history
+            let justAdded = false;
 
             if (isToday) {
                 habits[index].done = !habits[index].done;
-                if(habits[index].done) playSuccessSound();
                 localStorage.setItem('h-v5', JSON.stringify(habits));
             }
 
@@ -508,8 +509,14 @@
             const histItems = history[dateStr].items;
             const itemIndex = histItems.indexOf(name);
 
-            if (itemIndex > -1) histItems.splice(itemIndex, 1);
-            else histItems.push(name);
+            if (itemIndex > -1) {
+                histItems.splice(itemIndex, 1);
+            } else {
+                histItems.push(name);
+                justAdded = true; // Mark as added
+            }
+            
+            if(justAdded) playSuccessSound();
 
             history[dateStr].score = habits.length ? histItems.length / habits.length : 0;
             localStorage.setItem('hist-v5', JSON.stringify(history));
